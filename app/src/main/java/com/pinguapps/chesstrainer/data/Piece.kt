@@ -1,12 +1,11 @@
 package com.pinguapps.chesstrainer.data
 
-interface Piece {
+class Piece(
+    val color: Color,
+    val type: PieceType)
+{
 
-    val color: Color
-    val type: PieceType
 
-    fun isMoveValid(): Boolean {
 
-        return true
-    }
+
 }

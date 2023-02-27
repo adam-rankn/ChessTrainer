@@ -7,4 +7,5 @@ enum class PieceType {
     ROOK,
     KNIGHT,
     PAWN,
+    NONE
 }
