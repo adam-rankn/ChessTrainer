@@ -142,7 +142,12 @@ class TestChessboard {
     @Test
     fun testFenString(){
         val board = Chessboard()
-        board.loadPositionFenString("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+        board.loadPositionFenString("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b Kq - 1 2")
+
+        assertEquals(false,board.blackCastleKingRights)
+        assertEquals(true,board.blackCastleQueenRights)
+        assertEquals(true,board.whiteCastleKingRights)
+        assertEquals(false,board.whiteCastleQueenRights)
 
         assertEquals(PieceType.KNIGHT,board.getSquare("f3").piece.type)
 

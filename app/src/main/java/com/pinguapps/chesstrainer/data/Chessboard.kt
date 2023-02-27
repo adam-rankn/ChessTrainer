@@ -15,10 +15,10 @@ class Chessboard() {
 
     init {
         loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-        var whiteCastleQueenRights = true
-        var whiteCastleKingRights  = true
-        var blackCastleQueenRights = true
-        var blackCastleKingRights  = true
+        whiteCastleQueenRights = true
+        whiteCastleKingRights  = true
+        blackCastleQueenRights = true
+        blackCastleKingRights  = true
     }
 
     fun clearBoard() {
@@ -27,10 +27,10 @@ class Chessboard() {
                 square.piece = Piece(Color.NONE,PieceType.NONE)
             }
         }
-        var whiteCastleQueenRights = false
-        var whiteCastleKingRights  = false
-        var blackCastleQueenRights = false
-        var blackCastleKingRights  = false
+        whiteCastleQueenRights = false
+        whiteCastleKingRights  = false
+        blackCastleQueenRights = false
+        blackCastleKingRights  = false
     }
 
     fun getSquare(notation: String): Square {
@@ -442,7 +442,28 @@ class Chessboard() {
                 col++
             }
         }
+        val castlingRights =
+            if (fenString.contains('w')) {
+                fenString.substringAfterLast('w')
+        }
+            else {
+                fenString.substringAfterLast('b')
+        }
+
+        if (castlingRights.contains('K')) {
+            whiteCastleKingRights = true
+            }
+        if (castlingRights.contains('Q')) {
+            whiteCastleQueenRights = true
+        }
+        if (castlingRights.contains('k')) {
+            blackCastleKingRights = true
+        }
+        if (castlingRights.contains('q')) {
+            blackCastleQueenRights = true
+        }
     }
     //todo add castling rights
+    //todo check 4 digit string after w
 }
 
