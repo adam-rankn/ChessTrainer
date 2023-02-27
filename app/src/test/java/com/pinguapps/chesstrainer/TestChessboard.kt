@@ -175,4 +175,35 @@ class TestChessboard {
         val movesList3 = board.generateRookMoves(board.getSquare("d4"))
         assertEquals(10, movesList3.size)
     }
+
+    @Test
+    fun testCheckPins() {
+        val board = Chessboard()
+        board.loadPositionFenString("R1rnk3/ppppqnpp/5p2/1B5B/1b2R2b/2NP2P1/PPP2P1P/3QKN1r w - - 0 1")
+
+        //run for black and white kings
+        board.checkForPins(board.getSquare("e1"))
+        board.checkForPins(board.getSquare("e8"))
+
+        //testing all directions
+        assertEquals(PinnedState.VERTICAL,board.getPieceOnSquare("e7").pinned)
+        assertEquals(PinnedState.VERTICAL,board.getPieceOnSquare("e4").pinned)
+        assertEquals(PinnedState.HORIZONTAL,board.getPieceOnSquare("f1").pinned)
+        assertEquals(PinnedState.DIAGONALA8H1,board.getPieceOnSquare("c3").pinned)
+        assertEquals(PinnedState.DIAGONALA8H1,board.getPieceOnSquare("f7").pinned)
+        assertEquals(PinnedState.DIAGONALA1H8,board.getPieceOnSquare("d7").pinned)
+
+        //if two pieces are on the same line neither gets pinned
+        assertEquals(PinnedState.NONE,board.getPieceOnSquare("f2").pinned)
+        assertEquals(PinnedState.NONE,board.getPieceOnSquare("d3").pinned)
+
+        assertEquals(PinnedState.NONE,board.getPieceOnSquare("c8").pinned)
+        assertEquals(PinnedState.NONE,board.getPieceOnSquare("d8").pinned)
+
+        //test to make sure king does not get flagged as pinned
+        assertEquals(PinnedState.NONE,board.getPieceOnSquare("e1").pinned)
+        assertEquals(PinnedState.NONE,board.getPieceOnSquare("e8").pinned)
+
+
+    }
 }

@@ -54,6 +54,10 @@ class Chessboard() {
         return (board[col][row])
     }
 
+    fun getPieceOnSquare(notation: String): Piece {
+        return getSquare(notation).piece
+    }
+
     fun makeMove(move: Move){
 
         val startSquare = move.startSquare
@@ -217,7 +221,8 @@ class Chessboard() {
         return validMoves
     }
 
-    fun checkForPins(kingSquare: Square): Boolean {
+    fun checkForPins(kingSquare: Square) {
+        //todo use actual king piece, track king locations on board
         val ownColor = kingSquare.piece.color
         val opponentColor = if (ownColor == Color.WHITE){
             Color.BLACK
@@ -227,86 +232,166 @@ class Chessboard() {
         val row = kingSquare.row
         val col = kingSquare.col
         val movesUp = 7-row
-        for (i in 1..movesUp){
+        var ownPieces = 0
+        var potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+
+        //up from king
+        for (i in 1..movesUp) {
             val piece = board[col][row+i].piece
-            if (piece.type == PieceType.ROOK
-                    || piece.type == PieceType.QUEEN
-                    && piece.color == opponentColor) {
-                return true
-            }
-        }
-        for (i in 1..row){
-            val piece = board[col][row-i].piece
-            if (piece.type == PieceType.ROOK
-                || piece.type == PieceType.QUEEN
-                && piece.color == opponentColor){
-                return true
-            }
-        }
-        val movesRight = 7-col
-        for (i in 1..movesRight){
-            val piece = board[col+i][row].piece
-            if (piece.type == PieceType.ROOK
-                || piece.type == PieceType.QUEEN
-                && piece.color == opponentColor){
-                return true
-            }
-        }
-        for (i in 1..col){
-            val piece = board[col-i][row].piece
-            if (piece.type == PieceType.ROOK
-                || piece.type == PieceType.QUEEN
-                && piece.color == opponentColor){
-                return true
-            }
-        }
-
-        val movesUpRight = min(7-row, 7-col)
-        for (i in 1..movesUpRight){
-            val piece = board[col+i][row+i].piece
-            if (piece.type == PieceType.BISHOP||
-                piece.type == PieceType.QUEEN
-                && piece.color == opponentColor) {
-                return true
-            }
-        }
-
-        val movesUpLeft = min(7-col,row)
-        for (i in 1..movesUpLeft){
-            val piece = board[col+i][row-i].piece
-            if (piece.type == PieceType.BISHOP||
-                piece.type == PieceType.QUEEN
-                && piece.color == opponentColor) {
-                return true
-            }
-        }
-
-        val movesDownLeft = min(col,row)
-        for (i in 1..movesDownLeft) {
-            val piece = board[col - i][row - i].piece
-            if (piece.type == PieceType.BISHOP ||
-                piece.type == PieceType.QUEEN
-                && piece.color == opponentColor) {
-                return true
-            }
-        }
-
-        val movesDownRight = min(col,7-row)
-        for (i in 1..movesDownRight){
-            val piece = board[col-i][row+i].piece
-            if (piece.type == PieceType.BISHOP||
-                piece.type == PieceType.QUEEN
-                && piece.color == opponentColor) {
-                return true
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
             }
             else if (piece.color == ownColor){
                 break
             }
-            //todo finish + do pin
+            else if (piece.type == PieceType.ROOK
+                    || piece.type == PieceType.QUEEN
+                    && piece.color == opponentColor) {
+                potentialPinnedPiece.pinned = PinnedState.VERTICAL
+            }
         }
-        return false
-    }
 
+        //down from king
+        ownPieces = 0
+        potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+        for (i in 1..row){
+            val piece = board[col][row-i].piece
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
+            }
+            else if (piece.color == ownColor){
+                break
+            }
+            else if (piece.type == PieceType.ROOK
+                || piece.type == PieceType.QUEEN
+                && piece.color == opponentColor){
+                potentialPinnedPiece.pinned = PinnedState.VERTICAL
+
+            }
+        }
+
+        //right from king
+        ownPieces = 0
+        potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+        val movesRight = 7-col
+        for (i in 1..movesRight){
+            val piece = board[col+i][row].piece
+
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
+            }
+            else if (piece.color == ownColor){
+                break
+            }
+            else if (piece.type == PieceType.ROOK
+                || piece.type == PieceType.QUEEN
+                && piece.color == opponentColor){
+                potentialPinnedPiece.pinned = PinnedState.HORIZONTAL
+            }
+        }
+
+        //left from king
+        ownPieces = 0
+        potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+        for (i in 1..col){
+            val piece = board[col-i][row].piece
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
+            }
+            else if (piece.color == ownColor){
+                break
+            }
+            else if (piece.type == PieceType.ROOK
+                || piece.type == PieceType.QUEEN
+                && piece.color == opponentColor) {
+                potentialPinnedPiece.pinned = PinnedState.HORIZONTAL
+
+            }
+        }
+
+        // up right from king
+        ownPieces = 0
+        potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+        val movesUpRight = min(7-row, 7-col)
+        for (i in 1..movesUpRight){
+            val piece = board[col+i][row+i].piece
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
+            }
+            else if (piece.color == ownColor){
+                break
+            }
+            else if (piece.type == PieceType.BISHOP||
+                piece.type == PieceType.QUEEN
+                && piece.color == opponentColor) {
+                potentialPinnedPiece.pinned = PinnedState.DIAGONALA1H8
+
+            }
+        }
+
+        //up left from king
+        ownPieces = 0
+        potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+        val movesUpLeft = min(7-col,row)
+        for (i in 1..movesUpLeft){
+            val piece = board[col+i][row-i].piece
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
+            }
+            else if (piece.color == ownColor){
+                break
+            }
+            else if (piece.type == PieceType.BISHOP||
+                piece.type == PieceType.QUEEN
+                && piece.color == opponentColor) {
+                potentialPinnedPiece.pinned = PinnedState.DIAGONALA8H1
+            }
+        }
+        // down left from king
+        ownPieces = 0
+        potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+        val movesDownLeft = min(col,row)
+        for (i in 1..movesDownLeft) {
+            val piece = board[col - i][row - i].piece
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
+            }
+            else if (piece.color == ownColor){
+                break
+            }
+            else if (piece.type == PieceType.BISHOP ||
+                piece.type == PieceType.QUEEN
+                && piece.color == opponentColor) {
+                potentialPinnedPiece.pinned = PinnedState.DIAGONALA1H8
+            }
+        }
+        //down right from king
+        ownPieces = 0
+        potentialPinnedPiece = Piece(Color.NONE,PieceType.NONE)
+        val movesDownRight = min(col,7-row)
+        for (i in 1..movesDownRight){
+            val piece = board[col-i][row+i].piece
+            if (piece.color == ownColor && ownPieces == 0){
+                ownPieces = 1
+                potentialPinnedPiece = piece
+            }
+            else if (piece.color == ownColor){
+                break
+            }
+            else if (piece.type == PieceType.BISHOP||
+                piece.type == PieceType.QUEEN
+                && piece.color == opponentColor) {
+                potentialPinnedPiece.pinned = PinnedState.DIAGONALA8H1
+            }
+        }
+    }
 
     private fun canQueenMove(from: Square, to: Square): Boolean {
         return canRookMove(from, to) || canBishopMove(from, to)
