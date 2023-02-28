@@ -3,7 +3,7 @@ package com.pinguapps.chesstrainer.data
 import kotlin.math.abs
 import kotlin.math.min
 
-class Chessboard() {
+class Chessboard {
 
     val board = Array(8) { row -> Array(8) { col -> Square(col,row) } }
 
@@ -94,33 +94,13 @@ class Chessboard() {
     fun generatePieceMoves(square: Square): MutableList<Move> {
         val pieceType = square.piece.type
         if(pieceType == PieceType.ROOK) {
-
             return generateRookMoves(square)
-
         }
         else return mutableListOf()
     }
 
     fun placePiece(square: Square, color: Color, type: PieceType) {
         square.piece = Piece(color,type)
-    }
-
-    fun isMoveValid(start: String, end: String): Boolean {
-        val piece = getSquare(start)
-        val playerColor = piece.squareColor
-        val targetSquare = getSquare(end)
-
-        if (targetSquare.piece.color == piece.squareColor){
-            return false
-        }
-
-        return false
-    }
-
-
-
-    fun getValidMoves(start: String){
-        val square = getSquare(start)
     }
 
     fun isClearVerticallyBetween(from: Square, to: Square): Boolean {
@@ -159,17 +139,6 @@ class Chessboard() {
             }
         }
         return true
-    }
-
-    fun canBishopMove(from: Square, to: Square): Boolean {
-        if (from.piece.color == to.piece.color) {
-            return false
-        }
-        // check if on same diagonal
-        else if (abs(from.col - to.col) == abs(from.row - to.row)) {
-            return isClearDiagonally(from, to)
-        }
-        return false
     }
 
     fun canRookMove(from: Square, to: Square): Boolean {
@@ -228,7 +197,7 @@ class Chessboard() {
                 }
             }
         }
-        //todo optimalo
+        //todo use bishop moves method for optimization
         return validMoves
     }
 
@@ -404,10 +373,6 @@ class Chessboard() {
         }
     }
 
-    private fun canQueenMove(from: Square, to: Square): Boolean {
-        return canRookMove(from, to) || canBishopMove(from, to)
-    }
-
     fun pieceTypeOnSquare(col: Int, row: Int): PieceType {
         return board[col][row].piece.type
     }
@@ -447,25 +412,25 @@ class Chessboard() {
     fun generateValidPawnMoves(pawnSquare: Square): MutableList<Move> {
         val validMoves = mutableListOf<Move>()
         val pinState = pawnSquare.piece.pinned
-        if (pinState == PinnedState.NONE){
-            //push pawns or cap
-            validMoves.addAll(generatePawnPushMoves(pawnSquare))
-            validMoves.addAll(generatePawnCaptures(pawnSquare))
-        }
-        else if (pinState == PinnedState.VERTICAL) {
-            validMoves.addAll(generatePawnPushMoves(pawnSquare))
-            //push only
-        }
-        else if (pinState == PinnedState.DIAGONALA1H8) {
-            // capture along this diagonal only
-            validMoves.addAll(generatePawnCaptures(pawnSquare))
-        }
-        else if (pinState == PinnedState.DIAGONALA8H1) {
-            // capture along this diagonal only
-            validMoves.addAll(generatePawnCaptures(pawnSquare))
-        }
-        else if (pinState == PinnedState.HORIZONTAL) {
-            return validMoves
+        when (pinState) {
+            PinnedState.NONE -> {
+                //push pawns or cap
+                validMoves.addAll(generatePawnPushMoves(pawnSquare))
+                validMoves.addAll(generatePawnCaptures(pawnSquare))
+            }
+            PinnedState.VERTICAL -> {
+                validMoves.addAll(generatePawnPushMoves(pawnSquare))
+                //push only
+            }
+            PinnedState.DIAGONALA1H8 -> {
+                // capture only
+                validMoves.addAll(generatePawnCaptures(pawnSquare))
+            }
+            PinnedState.DIAGONALA8H1 -> {
+                // capture only
+                validMoves.addAll(generatePawnCaptures(pawnSquare))
+            }
+            PinnedState.HORIZONTAL -> {}
         }
         return validMoves
     }
@@ -573,6 +538,188 @@ class Chessboard() {
             }
         }
         return validMoves
+    }
+
+    fun generateBishopMoves(bishopSquare: Square): MutableList<Move> {
+        val validMoves = mutableListOf<Move>()
+        val col = bishopSquare.col
+        val row = bishopSquare.row
+        val ownColor = bishopSquare.piece.color
+        val opponentColor = if (ownColor == Color.WHITE){
+            Color.BLACK
+        } else {
+            Color.WHITE
+        }
+
+        val pinState = bishopSquare.piece.pinned
+
+        if (pinState == PinnedState.DIAGONALA1H8 || pinState == PinnedState.NONE) {
+            var squaresMoved = 1
+
+            // up right moves
+            while (col + squaresMoved <= 7 && row + squaresMoved <= 7) {
+                val targetSquare = board[col + squaresMoved][row + squaresMoved]
+                if (targetSquare.piece.color == opponentColor){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.piece.color == ownColor){
+                    break
+                }
+                else if (targetSquare.piece.type == PieceType.NONE){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    squaresMoved ++
+                }
+            }
+            //down left moves
+            squaresMoved = 1
+            while (col - squaresMoved >= 0 && row -squaresMoved >= 0) {
+                val targetSquare = board[col - squaresMoved][row - squaresMoved]
+                if (targetSquare.piece.color == opponentColor){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.piece.color == ownColor){
+                    break
+                }
+                else if (targetSquare.piece.type == PieceType.NONE){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    squaresMoved ++
+                }
+            }
+        }
+        if (pinState == PinnedState.DIAGONALA8H1 || pinState == PinnedState.NONE) {
+            var squaresMoved = 1
+
+            // up left moves
+            while (col - squaresMoved >= 0 && row + squaresMoved <= 7) {
+                val targetSquare = board[col - squaresMoved][row + squaresMoved]
+                if (targetSquare.piece.color == opponentColor){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.piece.color == ownColor){
+                    break
+                }
+                else if (targetSquare.piece.type == PieceType.NONE){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    squaresMoved ++
+                }
+            }
+            squaresMoved = 1
+            // down right moves
+            while (col + squaresMoved <= 7 && row - squaresMoved >= 0) {
+                val targetSquare = board[col + squaresMoved][row - squaresMoved]
+                if (targetSquare.piece.color == opponentColor){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.piece.color == ownColor){
+                    break
+                }
+                else if (targetSquare.piece.type == PieceType.NONE){
+                    val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.BISHOP)
+                    validMoves.add(move)
+                    squaresMoved ++
+                }
+            }
+        }
+        return validMoves
+    }
+
+    fun generateQueenMoves(queenSquare: Square): MutableList<Move> {
+        return (generateRookMoves(queenSquare) + generateBishopMoves(queenSquare)) as MutableList<Move>
+    }
+
+    fun generateKingMoves(kingSquare: Square): MutableList<Move> {
+        val validMoves = mutableListOf<Move>()
+        val col = kingSquare.col
+        val row = kingSquare.row
+        val ownColor = kingSquare.piece.color
+        val opponentColor = if (ownColor == Color.WHITE){
+            Color.BLACK
+        } else {
+            Color.WHITE
+        }
+        val kingMoves = listOf(
+            Pair(-1,-1), Pair(-1, 0), Pair(-1,1), Pair(0, 1),
+            Pair(1,1), Pair(1, 0),Pair(1,-1), Pair(0, -1)
+        )
+        for (move in kingMoves){
+            val targetSquare = board[col + move.first][row + move.second]
+            if (targetSquare.piece.color != ownColor && !isKingInCheck(targetSquare)){
+                val isCapture = targetSquare.piece.color == opponentColor
+                val move = Move(startSquare = kingSquare, endSquare = targetSquare,
+                    isCapture = isCapture, piece = PieceType.KING)
+                validMoves.add(move)
+            }
+        }
+
+        //castling moves
+        if (ownColor == Color.BLACK){
+            if (blackCastleKingRights && !isKingInCheck(getSquare("f8"))
+                && !isKingInCheck(getSquare("g8"))
+                && getSquare("f8").piece.type == PieceType.NONE
+                && getSquare("g8").piece.type == PieceType.NONE
+            ){
+                val move = Move(startSquare = kingSquare, endSquare = getSquare("g8"),
+                    isCapture = false, piece = PieceType.KING, notation = "o-o")
+                validMoves.add(move)
+
+            }
+            if (blackCastleQueenRights && !isKingInCheck(getSquare("d8"))
+                && !isKingInCheck(getSquare("c8"))
+                && getSquare("d8").piece.type == PieceType.NONE
+                && getSquare("c8").piece.type == PieceType.NONE
+            ){
+                val move = Move(startSquare = kingSquare, endSquare = getSquare("c8"),
+                    isCapture = false, piece = PieceType.KING, notation = "o-o-o")
+                validMoves.add(move)
+
+            }
+        }
+        else if (ownColor == Color.WHITE){
+            if (whiteCastleKingRights && !isKingInCheck(getSquare("f1"))
+                && !isKingInCheck(getSquare("g1"))
+                && getSquare("f1").piece.type == PieceType.NONE
+                && getSquare("g1").piece.type == PieceType.NONE
+            ){
+                val move = Move(startSquare = kingSquare, endSquare = getSquare("g1"),
+                    isCapture = false, piece = PieceType.KING, notation = "O-O")
+                validMoves.add(move)
+
+            }
+            if (whiteCastleQueenRights && !isKingInCheck(getSquare("d1"))
+                && !isKingInCheck(getSquare("c1"))
+                && getSquare("d1").piece.type == PieceType.NONE
+                && getSquare("c1").piece.type == PieceType.NONE
+            ){
+                val move = Move(startSquare = kingSquare, endSquare = getSquare("c1"),
+                    isCapture = false, piece = PieceType.KING, notation = "O-O-O")
+                validMoves.add(move)
+            }
+        }
+            return validMoves
+    }
+
+    fun isKingInCheck(square: Square): Boolean{
+    return false
+
     }
 
     fun loadPositionFenString(fenString: String){

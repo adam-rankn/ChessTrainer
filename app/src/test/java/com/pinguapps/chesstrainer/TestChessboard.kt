@@ -98,22 +98,6 @@ class TestChessboard {
     }
 
     @Test
-    fun testBishopMove(){
-        val board = Chessboard()
-        val squareF1 = board.getSquare("f1")
-        val squareC4 = board.getSquare("c4")
-        val squareC5 = board.getSquare("c5")
-
-
-        assertEquals(false,board.canBishopMove(squareF1,squareC4))
-        board.makeMoveFromString("e2","e4")
-        assertEquals(true,board.canBishopMove(squareF1,squareC4))
-
-        board.makeMoveFromString("f1","c4")
-        assertEquals(false,board.canBishopMove(squareC4,squareC5))
-    }
-
-    @Test
     fun testRookMove(){
         val board = Chessboard()
         board.loadPositionFenString("4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1")
@@ -278,6 +262,53 @@ class TestChessboard {
         val e5moves = board.generateValidPawnMoves(board.getSquare("e5"))
         assertEquals(1,e5moves.size)
 
+    }
 
+    @Test
+    fun testGenerateBishopMoves(){
+        val board = Chessboard()
+        board.loadPositionFenString("1kb4R/b7/Rb4q1/8/q7/1B1B1N1N/2K3B1/8 w - - 0 1")
+
+        //diagonal pin
+        val d3moves = board.generateBishopMoves(board.getSquare("d3"))
+        assertEquals(3, d3moves.size)
+
+        //horizontal pin
+        val c8moves = board.generateBishopMoves(board.getSquare("c8"))
+        assertEquals(0, c8moves.size)
+
+        //own piece block
+        val g2moves = board.generateBishopMoves(board.getSquare("g2"))
+        assertEquals(2, g2moves.size)
+
+        val b3moves = board.generateBishopMoves(board.getSquare("b3"))
+        assertEquals(1, b3moves.size)
+
+        val b6moves = board.generateBishopMoves(board.getSquare("b6"))
+        assertEquals(8, b6moves.size)
+
+        val a7moves = board.generateBishopMoves(board.getSquare("a7"))
+        assertEquals(0, a7moves.size)
+    }
+
+    @Test
+    fun testGenerateQueenMoves(){
+        val board = Chessboard()
+        board.loadPositionFenString("4k3/2b1q1q1/8/N7/3n4/2Q5/4R3/r7 w - - 0 1")
+
+        val e7moves = board.generateQueenMoves(board.getSquare("e7"))
+        assertEquals(5,e7moves.size)
+
+        val c3moves = board.generateQueenMoves(board.getSquare("c3"))
+        assertEquals(19,c3moves.size)
+
+        val g7moves = board.generateQueenMoves(board.getSquare("g7"))
+        assertEquals(14,g7moves.size)
+    }
+
+    @Test
+    fun testGenerateKingMoves() {
+        val board = Chessboard()
+        board.loadPositionFenString("4k3/2b1q1q1/8/N7/3n4/2Q5/4R3/r7 w - - 0 1")
     }
 }

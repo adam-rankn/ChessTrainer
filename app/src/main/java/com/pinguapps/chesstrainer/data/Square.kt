@@ -17,5 +17,13 @@ class Square(val row: Int, val col: Int) {
         }
     }
 
+    override fun hashCode(): Int {
+        var result = row
+        result = 31 * result + col
+        result = 31 * result + piece.hashCode()
+        result = 31 * result + squareColor.hashCode()
+        return result
+    }
+
 
 }

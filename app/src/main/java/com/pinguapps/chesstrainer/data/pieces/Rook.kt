@@ -1,8 +1,6 @@
 package com.pinguapps.chesstrainer.data.pieces
 
 import com.pinguapps.chesstrainer.data.Color
-import com.pinguapps.chesstrainer.data.Move
-import com.pinguapps.chesstrainer.data.Piece
 import com.pinguapps.chesstrainer.data.Square
 
 class Rook(val color: Color,val square: Square) {
