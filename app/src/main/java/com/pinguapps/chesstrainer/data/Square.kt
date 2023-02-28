@@ -3,7 +3,7 @@ package com.pinguapps.chesstrainer.data
 class Square(val row: Int, val col: Int) {
 
     var piece: Piece = Piece(Color.BLACK,PieceType.NONE)
-    val color: Color = if (row + col % 2 == 0) {
+    val squareColor: Color = if (row + col % 2 == 0) {
         Color.BLACK }
     else {
         Color.WHITE

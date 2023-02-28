@@ -1,7 +1,6 @@
 package com.pinguapps.chesstrainer.data
 
 import kotlin.math.abs
-import kotlin.math.floor
 import kotlin.math.min
 
 class Chessboard() {
@@ -12,6 +11,10 @@ class Chessboard() {
     var whiteCastleKingRights  = true
     var blackCastleQueenRights = true
     var blackCastleKingRights  = true
+    var enPassantSquare: Square? = null
+
+    var whiteKingSquare = getSquare("e1")
+    var blackKingSquare = getSquare("e8")
 
     init {
         loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -104,10 +107,10 @@ class Chessboard() {
 
     fun isMoveValid(start: String, end: String): Boolean {
         val piece = getSquare(start)
-        val playerColor = piece.color
+        val playerColor = piece.squareColor
         val targetSquare = getSquare(end)
 
-        if (targetSquare.piece.color == piece.color){
+        if (targetSquare.piece.color == piece.squareColor){
             return false
         }
 
@@ -185,39 +188,47 @@ class Chessboard() {
         val row = fromSquare.row
         val col = fromSquare.col
         val movesUp = 7-row
+        val pinned = fromSquare.piece.pinned
 
-        for (i in 1..movesUp){
-            val toSquare = board[col][row+i]
-            if (canRookMove(fromSquare,toSquare)){
-                val isCapture = fromSquare.piece.color != Color.NONE
-                val move = Move(fromSquare,toSquare,PieceType.ROOK, isCapture)
-                validMoves.add(move)
+        if (pinned == PinnedState.NONE || pinned == PinnedState.VERTICAL) {
+            for (i in 1..movesUp) {
+                val toSquare = board[col][row + i]
+                if (canRookMove(fromSquare, toSquare)) {
+                    val isCapture = fromSquare.piece.color != Color.NONE
+                    val move = Move(fromSquare, toSquare, PieceType.ROOK, isCapture)
+                    validMoves.add(move)
+                }
             }
-        }
 
-        //todo same thing
-        for (i in 1..row){
-            if (canRookMove(fromSquare,board[col][row-i])){
-                val move = Move(fromSquare,board[col][row-i],PieceType.ROOK)
-                validMoves.add(move)
+            for (i in 1..row) {
+                if (canRookMove(fromSquare, board[col][row - i])) {
+                    val isCapture = fromSquare.piece.color != Color.NONE
+                    val move = Move(fromSquare, board[col][row - i], PieceType.ROOK, isCapture)
+                    validMoves.add(move)
+                }
             }
         }
 
         val movesRight = 7-col
 
-        for (i in 1..movesRight){
-            if (canRookMove(fromSquare,board[col+i][row])){
-                val move = Move(fromSquare,board[col+i][row],PieceType.ROOK)
-                validMoves.add(move)
+        if (pinned == PinnedState.NONE || pinned == PinnedState.HORIZONTAL) {
+            for (i in 1..movesRight) {
+                if (canRookMove(fromSquare, board[col + i][row])) {
+                    val isCapture = fromSquare.piece.color != Color.NONE
+                    val move = Move(fromSquare, board[col + i][row], PieceType.ROOK, isCapture)
+                    validMoves.add(move)
+                }
             }
-        }
 
-        for (i in 1..col){
-            if (canRookMove(fromSquare,board[col-i][row])){
-                val move = Move(fromSquare,board[col-i][row],PieceType.ROOK)
-                validMoves.add(move)
+            for (i in 1..col) {
+                if (canRookMove(fromSquare, board[col - i][row])) {
+                    val isCapture = fromSquare.piece.color != Color.NONE
+                    val move = Move(fromSquare, board[col - i][row], PieceType.ROOK, isCapture)
+                    validMoves.add(move)
+                }
             }
         }
+        //todo optimalo
         return validMoves
     }
 
@@ -401,10 +412,167 @@ class Chessboard() {
         return board[col][row].piece.type
     }
 
-    fun generateValidKnightMoves(knightSquare: Square) {
+    fun generateValidKnightMoves(knightSquare: Square): MutableList<Move> {
         val col = knightSquare.col
         val row = knightSquare.row
-        //(x - 2, y - 1), Pair(x - 2, y + 1), Pair(x - 1, y - 2), Pair(x - 1, y + 2), Pair(x + 2, y - 1), Pair(x + 2, y + 1)
+        val ownColor = knightSquare.piece.color
+        val opponentColor = if (ownColor == Color.WHITE){
+            Color.BLACK
+        } else {
+            Color.WHITE
+        }
+        val validMoves = mutableListOf<Move>()
+        if (knightSquare.piece.pinned == PinnedState.NONE) {
+            val knightMoves = listOf(
+                Pair(-2,-1), Pair(-2, +1),
+                Pair(+2, -1), Pair(+2, +1),
+                Pair(-1, +2), Pair(-1, -2),
+                Pair(+1, -2), Pair(+1, +2)
+            )
+            for (move in knightMoves) {
+                if (col + move.first in 0..7 && row + move.second in 0..7) {
+                    val targetSquare = board[col + move.first][row + move.second]
+                    if (targetSquare.piece.color != ownColor) {
+                        val isCapture = (targetSquare.piece.color == opponentColor)
+                        val move = Move(startSquare = knightSquare, endSquare = targetSquare,
+                            isCapture = isCapture, piece = PieceType.KNIGHT)
+                        validMoves.add(move)
+                    }
+                }
+            }
+        }
+        return validMoves
+    }
+
+    fun generateValidPawnMoves(pawnSquare: Square): MutableList<Move> {
+        val validMoves = mutableListOf<Move>()
+        val pinState = pawnSquare.piece.pinned
+        if (pinState == PinnedState.NONE){
+            //push pawns or cap
+            validMoves.addAll(generatePawnPushMoves(pawnSquare))
+            validMoves.addAll(generatePawnCaptures(pawnSquare))
+        }
+        else if (pinState == PinnedState.VERTICAL) {
+            validMoves.addAll(generatePawnPushMoves(pawnSquare))
+            //push only
+        }
+        else if (pinState == PinnedState.DIAGONALA1H8) {
+            // capture along this diagonal only
+            validMoves.addAll(generatePawnCaptures(pawnSquare))
+        }
+        else if (pinState == PinnedState.DIAGONALA8H1) {
+            // capture along this diagonal only
+            validMoves.addAll(generatePawnCaptures(pawnSquare))
+        }
+        else if (pinState == PinnedState.HORIZONTAL) {
+            return validMoves
+        }
+        return validMoves
+    }
+
+    private fun generatePawnPushMoves(pawnSquare: Square): MutableList<Move> {
+        val col = pawnSquare.col
+        val row = pawnSquare.row
+        val ownColor = pawnSquare.piece.color
+        val validMoves = mutableListOf<Move>()
+        if (pawnSquare.row == 1 && ownColor == Color.WHITE
+            && board[col][row+1].piece.type == PieceType.NONE
+            && board[col][row+2].piece.type == PieceType.NONE){
+            val move = Move(startSquare = pawnSquare, endSquare = board[col][row+2],
+                isCapture = false, piece = PieceType.PAWN)
+            validMoves.add(move)
+        }
+        else if (pawnSquare.row == 6 && ownColor == Color.BLACK
+            && board[col][row-1].piece.type == PieceType.NONE
+            && board[col][row-2].piece.type == PieceType.NONE) {
+            val move = Move(startSquare = pawnSquare, endSquare = board[col][row-2],
+                isCapture = false, piece = PieceType.PAWN)
+            validMoves.add(move)
+        }
+        if (ownColor == Color.WHITE && board[col][row+1].piece.type == PieceType.NONE){
+            val move = Move(startSquare = pawnSquare, endSquare = board[col][row+1],
+                isCapture = false, piece = PieceType.PAWN)
+            validMoves.add(move)
+        }
+        else if (ownColor == Color.BLACK && board[col][row-1].piece.type == PieceType.NONE) {
+            val move = Move(startSquare = pawnSquare, endSquare = board[col][row-1],
+                isCapture = false, piece = PieceType.PAWN)
+            validMoves.add(move)
+        }
+        return  validMoves
+    }
+
+    private fun generatePawnCaptures(pawnSquare: Square): MutableList<Move> {
+        val col = pawnSquare.col
+        val row = pawnSquare.row
+        val ownColor = pawnSquare.piece.color
+        val validMoves = mutableListOf<Move>()
+
+        if (ownColor == Color.WHITE) {
+            if (pawnSquare.piece.pinned == PinnedState.NONE ||
+                pawnSquare.piece.pinned == PinnedState.DIAGONALA1H8
+            ) {
+                if (col != 7 && board[col+1][row+1].piece.color == Color.BLACK){
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row+1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    validMoves.add(move)
+                }
+                if (col != 0 && board[col+1][row+1] == enPassantSquare) {
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row+1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    board[col+1][row].piece = Piece(Color.NONE,PieceType.NONE)
+                    validMoves.add(move)
+                }
+            }
+            if (pawnSquare.piece.pinned == PinnedState.NONE ||
+                pawnSquare.piece.pinned == PinnedState.DIAGONALA8H1
+            ) {
+                if (col != 0 && board[col-1][row+1].piece.color == Color.BLACK){
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row+1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    validMoves.add(move)
+                }
+                if (col != 0 && board[col-1][row+1] == enPassantSquare) {
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row+1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    board[col-1][row].piece = Piece(Color.NONE,PieceType.NONE)
+                    validMoves.add(move)
+                }
+            }
+        }
+        else if (ownColor == Color.BLACK) {
+            if (pawnSquare.piece.pinned == PinnedState.NONE ||
+                pawnSquare.piece.pinned == PinnedState.DIAGONALA1H8
+            ) {
+                if (col != 0 && board[col-1][row-1].piece.color == Color.WHITE){
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row-1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    validMoves.add(move)
+                }
+                if (col != 0 && board[col-1][row-1] == enPassantSquare){
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row-1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    board[col-1][row].piece = Piece(Color.NONE,PieceType.NONE)
+                    validMoves.add(move)
+                }
+            }
+            if (pawnSquare.piece.pinned == PinnedState.NONE ||
+                pawnSquare.piece.pinned == PinnedState.DIAGONALA8H1
+            ) {
+                if (col != 7 && board[col+1][row-1].piece.color == Color.WHITE){
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row-1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    validMoves.add(move)
+                }
+                if (col != 7 && board[col+1][row-1] == enPassantSquare){
+                    val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row-1],
+                        isCapture = true, piece = PieceType.PAWN)
+                    board[col+1][row].piece = Piece(Color.NONE,PieceType.NONE)
+                    validMoves.add(move)
+                }
+            }
+        }
+        return validMoves
     }
 
     fun loadPositionFenString(fenString: String){
@@ -439,6 +607,13 @@ class Chessboard() {
                 }
                 val type = typeHashMap[character.lowercase()]
                 board[col][row].piece = Piece(color,type!!)
+                if (character == 'k') {
+                    blackKingSquare = board[col][row]
+                }
+                if (character == 'K') {
+                    whiteKingSquare = board[col][row]
+
+                }
                 col++
             }
         }
@@ -462,8 +637,12 @@ class Chessboard() {
         if (castlingRights.contains('q')) {
             blackCastleQueenRights = true
         }
+
+        checkForPins(blackKingSquare)
+        checkForPins(whiteKingSquare)
     }
-    //todo add castling rights
-    //todo check 4 digit string after w
+    //todo en passant
+    //todo 50 move counter/half moves
+    //todo full move ctr
 }
 

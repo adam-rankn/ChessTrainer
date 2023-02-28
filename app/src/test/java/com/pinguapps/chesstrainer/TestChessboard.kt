@@ -1,6 +1,5 @@
 package com.pinguapps.chesstrainer
 
-import android.provider.CalendarContract.Colors
 import com.pinguapps.chesstrainer.data.*
 import org.junit.Test
 
@@ -30,9 +29,9 @@ class TestChessboard {
         val squareA2 = board.getSquare("a2")
         val squareA8 = board.getSquare("a8")
 
-        assertEquals(Color.BLACK,squareA1.color)
-        assertEquals(Color.WHITE,squareA2.color)
-        assertEquals(Color.WHITE,squareA8.color)
+        assertEquals(Color.BLACK,squareA1.squareColor)
+        assertEquals(Color.WHITE,squareA2.squareColor)
+        assertEquals(Color.WHITE,squareA8.squareColor)
     }
     @Test
     fun testInitialPosition(){
@@ -168,6 +167,8 @@ class TestChessboard {
     fun testGenerateRookMoves(){
         val board = Chessboard()
         board.loadPositionFenString("4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1")
+        board.checkForPins(board.whiteKingSquare)
+        board.checkForPins(board.blackKingSquare)
 
        val movesList = board.generatePieceMoves(board.getSquare("e2"))
         assertEquals(5, movesList.size)
@@ -182,13 +183,29 @@ class TestChessboard {
     }
 
     @Test
+    fun testGenerateValidKnightMoves() {
+        val board = Chessboard()
+        val moves = board.generateValidKnightMoves(board.getSquare("g1"))
+        assertEquals(2, moves.size)
+
+        board.loadPositionFenString("rnbqkbnr/pppppppp/8/8/3N4/8/PP1P1PPP/RNBQKB1R w KQkq - 0 1")
+        val moves2 = board.generateValidKnightMoves(board.getSquare("d4"))
+        assertEquals(8, moves2.size)
+
+        //knights cannot move if pinned
+        board.loadPositionFenString("rnbqk1nr/pppp1ppp/4p3/8/1b6/2NP4/PPP1PPPP/R1BQKBNR w KQkq - 0 1")
+        val moves3 = board.generateValidKnightMoves(board.getSquare("c3"))
+        assertEquals(0, moves3.size)
+    }
+
+    @Test
     fun testCheckPins() {
         val board = Chessboard()
         board.loadPositionFenString("R1rnk3/ppppqnpp/5p2/1B5B/1b2R2b/2NP2P1/PPP2P1P/3QKN1r w - - 0 1")
 
         //run for black and white kings
-        board.checkForPins(board.getSquare("e1"))
-        board.checkForPins(board.getSquare("e8"))
+        board.checkForPins(board.whiteKingSquare)
+        board.checkForPins(board.blackKingSquare)
 
         //testing all directions
         assertEquals(PinnedState.VERTICAL,board.getPieceOnSquare("e7").pinned)
@@ -205,9 +222,61 @@ class TestChessboard {
         assertEquals(PinnedState.NONE,board.getPieceOnSquare("c8").pinned)
         assertEquals(PinnedState.NONE,board.getPieceOnSquare("d8").pinned)
 
-        //test to make sure king does not get flagged as pinned
-        assertEquals(PinnedState.NONE,board.getPieceOnSquare("e1").pinned)
-        assertEquals(PinnedState.NONE,board.getPieceOnSquare("e8").pinned)
+        //test king does not get flagged as pinned
+        assertEquals(PinnedState.NONE,board.whiteKingSquare.piece.pinned)
+        assertEquals(PinnedState.NONE,board.blackKingSquare.piece.pinned)
+
+    }
+
+    @Test
+    fun testGeneratePawnMoves(){
+        val board = Chessboard()
+        board.loadPositionFenString("r1b1kb2/1ppppppp/5N1B/1q2r3/PpP1P3/5n1n/1P2PPPP/RN1QKB1R w KQq a3 0 1")
+        board.enPassantSquare = board.getSquare("a3")
+
+        val g2moves = board.generateValidPawnMoves(board.getSquare("g2"))
+        assertEquals(4,g2moves.size)
+
+        val g7moves = board.generateValidPawnMoves(board.getSquare("g7"))
+        assertEquals(4,g7moves.size)
+
+        val b4moves = board.generateValidPawnMoves(board.getSquare("b4"))
+        assertEquals(2,b4moves.size)
+
+        val e4moves = board.generateValidPawnMoves(board.getSquare("e4"))
+        assertEquals(0,e4moves.size)
+
+        val d7moves = board.generateValidPawnMoves(board.getSquare("d7"))
+        assertEquals(2,d7moves.size)
+
+        board.loadPositionFenString("k2qqq2/1p2Pb2/P1B5/8/6pP/1P4P1/K1P1r3/8 w - - 0 1")
+        board.enPassantSquare = board.getSquare("h3")
+        val b3moves = board.generateValidPawnMoves(board.getSquare("b3"))
+        assertEquals(0,b3moves.size)
+
+        val c2moves = board.generateValidPawnMoves(board.getSquare("c2"))
+        assertEquals(0,c2moves.size)
+
+        val g4moves = board.generateValidPawnMoves(board.getSquare("g4"))
+        assertEquals(1,g4moves.size)
+
+        val b7moves = board.generateValidPawnMoves(board.getSquare("b7"))
+        assertEquals(1,b7moves.size)
+
+        val e7moves = board.generateValidPawnMoves(board.getSquare("e7"))
+        assertEquals(2,e7moves.size)
+
+        board.loadPositionFenString("1k2rr2/8/1p6/B1BpP3/8/6b1/5P2/1R2K3 w - - 0 1")
+        board.enPassantSquare = board.getSquare("d6")
+
+        val f2moves = board.generateValidPawnMoves(board.getSquare("f2"))
+        assertEquals(1,f2moves.size)
+
+        val b6moves = board.generateValidPawnMoves(board.getSquare("b6"))
+        assertEquals(1,b6moves.size)
+
+        val e5moves = board.generateValidPawnMoves(board.getSquare("e5"))
+        assertEquals(1,e5moves.size)
 
 
     }
