@@ -3,6 +3,7 @@ package com.pinguapps.chesstrainer.data
 import kotlin.math.abs
 import kotlin.math.min
 
+
 class Chessboard {
 
     val board = Array(8) { row -> Array(8) { col -> Square(col,row) } }
@@ -661,31 +662,39 @@ class Chessboard {
             Pair(1,1), Pair(1, 0),Pair(1,-1), Pair(0, -1)
         )
         for (move in kingMoves){
-            val targetSquare = board[col + move.first][row + move.second]
-            if (targetSquare.piece.color != ownColor && !isKingInCheck(targetSquare)){
-                val isCapture = targetSquare.piece.color == opponentColor
-                val move = Move(startSquare = kingSquare, endSquare = targetSquare,
-                    isCapture = isCapture, piece = PieceType.KING)
-                validMoves.add(move)
+            if (col + move.first in 0..7 && row + move.second in 0..7) {
+                val targetSquare = board[col + move.first][row + move.second]
+                if (targetSquare.piece.color != ownColor && !isKingInCheck(targetSquare,ownColor)) {
+                    val isCapture = targetSquare.piece.color == opponentColor
+                    val move = Move(
+                        startSquare = kingSquare, endSquare = targetSquare,
+                        isCapture = isCapture, piece = PieceType.KING
+                    )
+                    validMoves.add(move)
+                }
             }
         }
 
         //castling moves
         if (ownColor == Color.BLACK){
-            if (blackCastleKingRights && !isKingInCheck(getSquare("f8"))
-                && !isKingInCheck(getSquare("g8"))
+            if (blackCastleKingRights
                 && getSquare("f8").piece.type == PieceType.NONE
                 && getSquare("g8").piece.type == PieceType.NONE
+                && !isKingInCheck(getSquare("f8"),ownColor)
+                && !isKingInCheck(getSquare("g8"),ownColor)
+
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("g8"),
                     isCapture = false, piece = PieceType.KING, notation = "o-o")
                 validMoves.add(move)
 
             }
-            if (blackCastleQueenRights && !isKingInCheck(getSquare("d8"))
-                && !isKingInCheck(getSquare("c8"))
+            if (blackCastleQueenRights
                 && getSquare("d8").piece.type == PieceType.NONE
                 && getSquare("c8").piece.type == PieceType.NONE
+                && !isKingInCheck(getSquare("d8"),ownColor)
+                && !isKingInCheck(getSquare("c8"),ownColor)
+
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("c8"),
                     isCapture = false, piece = PieceType.KING, notation = "o-o-o")
@@ -694,20 +703,24 @@ class Chessboard {
             }
         }
         else if (ownColor == Color.WHITE){
-            if (whiteCastleKingRights && !isKingInCheck(getSquare("f1"))
-                && !isKingInCheck(getSquare("g1"))
+            if (whiteCastleKingRights
                 && getSquare("f1").piece.type == PieceType.NONE
                 && getSquare("g1").piece.type == PieceType.NONE
+                && !isKingInCheck(getSquare("f1"),ownColor)
+                && !isKingInCheck(getSquare("g1"),ownColor)
+
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("g1"),
                     isCapture = false, piece = PieceType.KING, notation = "O-O")
                 validMoves.add(move)
 
             }
-            if (whiteCastleQueenRights && !isKingInCheck(getSquare("d1"))
-                && !isKingInCheck(getSquare("c1"))
+            if (whiteCastleQueenRights
                 && getSquare("d1").piece.type == PieceType.NONE
                 && getSquare("c1").piece.type == PieceType.NONE
+                && !isKingInCheck(getSquare("d1"),ownColor)
+                && !isKingInCheck(getSquare("c1"),ownColor)
+
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("c1"),
                     isCapture = false, piece = PieceType.KING, notation = "O-O-O")
@@ -717,9 +730,231 @@ class Chessboard {
             return validMoves
     }
 
-    fun isKingInCheck(square: Square): Boolean{
-    return false
+    fun isKingInCheck(kingSquare: Square, color: Color = Color.NONE): Boolean{
+        val col = kingSquare.col
+        val row = kingSquare.row
 
+        val ownColor = if (color != Color.NONE){
+            color
+        }
+        else {
+            kingSquare.piece.color
+        }
+
+        val opponentColor = if (ownColor == Color.WHITE){
+            Color.BLACK
+        }
+        else {
+            Color.WHITE
+        }
+
+        //pawns
+
+        if (ownColor == Color.WHITE) {
+            if (col > 0 && row < 7 && board[col - 1][row + 1].piece.type == PieceType.PAWN
+                && board[col - 1][row + 1].piece.color == Color.BLACK) {
+                return true
+            }
+            else if (col < 7 && row < 7 && board[col + 1][row + 1].piece.type == PieceType.PAWN
+                && board[col + 1][row + 1].piece.color == Color.BLACK
+            ) {
+                return true
+            }
+        }
+        else if (ownColor == Color.BLACK) {
+            if (col > 0 &&  row > 0 && board[col - 1][row - 1].piece.type == PieceType.PAWN
+                && board[col - 1][row - 1].piece.color == Color.WHITE) {
+                return true
+            }
+            else if (col < 7 &&  row > 0 && board[col + 1][row - 1].piece.type == PieceType.PAWN
+                && board[col + 1][row - 1].piece.color == Color.WHITE
+            ) {
+                return true
+            }
+        }
+
+        //todo
+
+
+        //knights
+        val knightMoves = listOf(
+            Pair(-2,-1), Pair(-2, +1),
+            Pair(+2, -1), Pair(+2, +1),
+            Pair(-1, +2), Pair(-1, -2),
+            Pair(+1, -2), Pair(+1, +2)
+        )
+        for (move in knightMoves) {
+            val targetCol = kingSquare.col + move.first
+            val targetRow = kingSquare.row + move.second
+            if (targetCol in 0..7
+                && targetRow in 0..7) {
+                val targetSquare = board[targetCol][targetRow]
+                if (targetSquare.piece.type == PieceType.KNIGHT
+                    && targetSquare.piece.color == opponentColor) {
+                    return true
+                    //todo try catch for index oob?
+                }
+            }
+        }
+
+        //diagonals
+        //up left
+        var squaresChecked = 1
+        while (col - squaresChecked >= 0 && row + squaresChecked <= 7) {
+            val targetSquare = board[col - squaresChecked][row + squaresChecked]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.BISHOP ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+        //up right
+        squaresChecked = 1
+        while (col + squaresChecked <= 7 && row + squaresChecked <= 7) {
+            val targetSquare = board[col + squaresChecked][row + squaresChecked]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.BISHOP ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+        //down right
+        squaresChecked = 1
+        while (col + squaresChecked <= 7 && row - squaresChecked >=0) {
+            val targetSquare = board[col + squaresChecked][row - squaresChecked]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.BISHOP ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+        //down left
+        squaresChecked = 1
+        while (col - squaresChecked >= 0 && row - squaresChecked >= 0) {
+            val targetSquare = board[col - squaresChecked][row - squaresChecked]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.BISHOP ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+
+        //vertical
+        //up
+        squaresChecked = 1
+        while (row + squaresChecked <= 7) {
+            val targetSquare = board[col][row + squaresChecked]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.ROOK ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+        //down
+        squaresChecked = 1
+        while (row - squaresChecked >= 0) {
+            val targetSquare = board[col][row - squaresChecked]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.ROOK ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+        //right
+        squaresChecked = 1
+        while (col + squaresChecked <=7 ) {
+            val targetSquare = board[col + squaresChecked][row]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.ROOK ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+        //left
+        squaresChecked = 1
+        while (col - squaresChecked >= 0 ) {
+            val targetSquare = board[col - squaresChecked][row]
+            if (targetSquare.piece.color == Color.NONE){
+                squaresChecked ++
+                continue
+            }
+            else if (targetSquare.piece.color == ownColor){
+                break
+            }
+            else if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.piece.type == PieceType.ROOK ||
+                    targetSquare.piece.type == PieceType.QUEEN){
+                    return true
+                }
+                break
+            }
+        }
+        //horizontal
+
+    return false
     }
 
     fun loadPositionFenString(fenString: String){
