@@ -37,27 +37,27 @@ class TestChessboard {
     fun testInitialPosition(){
         val board = Chessboard()
         val squareA2 = board.getSquare("a2")
-        assertEquals(PieceType.PAWN,squareA2.piece.type)
-        assertEquals(Color.WHITE,squareA2.piece.color)
+        assertEquals(PieceType.PAWN,squareA2.pieceType)
+        assertEquals(Color.WHITE,squareA2.pieceColor)
 
-        assertEquals(PieceType.ROOK,board.getSquare("h8").piece.type)
+        assertEquals(PieceType.ROOK,board.getSquare("h8").pieceType)
 
-        assertEquals(PieceType.BISHOP,board.getSquare("c1").piece.type)
-        assertEquals(PieceType.QUEEN,board.getSquare("d1").piece.type)
+        assertEquals(PieceType.BISHOP,board.getSquare("c1").pieceType)
+        assertEquals(PieceType.QUEEN,board.getSquare("d1").pieceType)
 
-        assertEquals(PieceType.PAWN,board.getSquare("d7").piece.type)
-        assertEquals(Color.BLACK,board.getSquare("d7").piece.color)
+        assertEquals(PieceType.PAWN,board.getSquare("d7").pieceType)
+        assertEquals(Color.BLACK,board.getSquare("d7").pieceColor)
 
-        assertEquals(PieceType.BISHOP,board.getSquare("c8").piece.type)
-        assertEquals(PieceType.QUEEN,board.getSquare("d8").piece.type)
+        assertEquals(PieceType.BISHOP,board.getSquare("c8").pieceType)
+        assertEquals(PieceType.QUEEN,board.getSquare("d8").pieceType)
 
-        assertEquals(PieceType.PAWN,board.getSquare("a7").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("b7").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("c7").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("d7").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("e7").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("f7").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("h7").piece.type)
+        assertEquals(PieceType.PAWN,board.getSquare("a7").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("b7").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("c7").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("d7").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("e7").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("f7").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("h7").pieceType)
 
     }
 
@@ -66,14 +66,14 @@ class TestChessboard {
         val board = Chessboard()
         board.makeMoveFromString("e2","e4")
 
-        assertEquals(PieceType.PAWN,board.getSquare("e4").piece.type)
-        assertEquals(Color.WHITE,board.getSquare("e4").piece.color)
-        assertEquals(PieceType.NONE,board.getSquare("e2").piece.type)
+        assertEquals(PieceType.PAWN,board.getSquare("e4").pieceType)
+        assertEquals(Color.WHITE,board.getSquare("e4").pieceColor)
+        assertEquals(PieceType.NONE,board.getSquare("e2").pieceType)
 
         board.makeMoveFromString("e7","e5")
-        assertEquals(PieceType.PAWN,board.getSquare("e5").piece.type)
-        assertEquals(Color.BLACK,board.getSquare("e5").piece.color)
-        assertEquals(PieceType.NONE,board.getSquare("e7").piece.type)
+        assertEquals(PieceType.PAWN,board.getSquare("e5").pieceType)
+        assertEquals(Color.BLACK,board.getSquare("e5").pieceColor)
+        assertEquals(PieceType.NONE,board.getSquare("e7").pieceType)
 
     }
 
@@ -98,31 +98,6 @@ class TestChessboard {
     }
 
     @Test
-    fun testRookMove(){
-        val board = Chessboard()
-        board.loadPositionFenString("4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1")
-
-        val rookStart = board.getSquare("e2")
-        val rookTarget = board.getSquare("e7")
-        assertEquals(true,board.canRookMove(rookStart,rookTarget))
-
-        val rookTarget3 = board.getSquare("a2")
-        //assertEquals(false,board.canRookMove(rookStart,rookTarget3))
-
-        //add knight
-        board.loadPositionFenString("4k3/4r3/4N3/8/8/8/4R3/4K3 w - - 0 1")
-        val rookTarget2 = board.getSquare("e6")
-        val rookTarget2a = board.getSquare("e7")
-
-        //test pin
-        assertEquals(false,board.canRookMove(rookStart,rookTarget2))
-
-        assertEquals(false,board.isClearVerticallyBetween(rookStart,rookTarget2a))
-        assertEquals(false,board.canRookMove(rookStart,rookTarget2a))
-
-    }
-
-    @Test
     fun testFenString(){
         val board = Chessboard()
         board.loadPositionFenString("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b Kq - 1 2")
@@ -132,29 +107,30 @@ class TestChessboard {
         assertEquals(true,board.whiteCastleKingRights)
         assertEquals(false,board.whiteCastleQueenRights)
 
-        assertEquals(PieceType.KNIGHT,board.getSquare("f3").piece.type)
+        assertEquals(PieceType.KNIGHT,board.getSquare("f3").pieceType)
 
         board.loadPositionFenString("8/3k4/3p4/2pP1p2/1KP2P2/8/8/8")
-        assertEquals(PieceType.PAWN,board.getSquare("c4").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("c5").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("d5").piece.type)
-        assertEquals(PieceType.PAWN,board.getSquare("d6").piece.type)
+        assertEquals(PieceType.PAWN,board.getSquare("c4").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("c5").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("d5").pieceType)
+        assertEquals(PieceType.PAWN,board.getSquare("d6").pieceType)
 
-        assertEquals(Color.WHITE,board.getSquare("c4").piece.color)
-        assertEquals(Color.BLACK,board.getSquare("d6").piece.color)
+        assertEquals(Color.WHITE,board.getSquare("c4").pieceColor)
+        assertEquals(Color.BLACK,board.getSquare("d6").pieceColor)
 
-        assertEquals(PieceType.KING,board.getSquare("b4").piece.type)
-        assertEquals(PieceType.KING,board.getSquare("d7").piece.type)
+        assertEquals(PieceType.KING,board.getSquare("b4").pieceType)
+        assertEquals(PieceType.KING,board.getSquare("d7").pieceType)
     }
 
     @Test
     fun testGenerateRookMoves(){
         val board = Chessboard()
         board.loadPositionFenString("4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1")
-        board.checkForPins(board.whiteKingSquare)
-        board.checkForPins(board.blackKingSquare)
 
        val movesList = board.generatePieceMoves(board.getSquare("e2"))
+        for (move in movesList){
+            println(move.endSquare.row)
+        }
         assertEquals(5, movesList.size)
 
         board.loadPositionFenString("8/8/8/8/3R4/8/8/8 w - - 0 1")

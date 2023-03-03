@@ -93,7 +93,7 @@ class Chessboard {
     }
 
     fun generatePieceMoves(square: Square): MutableList<Move> {
-        val pieceType = square.piece.type
+        val pieceType = square.pieceType
         if(pieceType == PieceType.ROOK) {
             return generateRookMoves(square)
         }
@@ -102,19 +102,6 @@ class Chessboard {
 
     fun placePiece(square: Square, color: Color, type: PieceType) {
         square.piece = Piece(color,type)
-    }
-
-    fun isClearVerticallyBetween(from: Square, to: Square): Boolean {
-        if (from.col != to.col) return false
-        val squaresBetween = abs(from.row - to.row) - 1
-        if (squaresBetween == 0 ) return true
-        for (i in 1..squaresBetween) {
-            val nextRow = if (to.row > from.row) from.row + i else from.row - i
-            if (pieceTypeOnSquare(to.col,nextRow) != PieceType.NONE) {
-                return false
-            }
-        }
-        return true
     }
 
     fun isClearHorizontallyBetween(from: Square, to: Square): Boolean {
@@ -130,81 +117,112 @@ class Chessboard {
         return true
     }
 
-    fun isClearDiagonally(from: Square, to: Square): Boolean {
-        val squaresBetween = abs(from.col - to.col) - 1
-        for (i in 1..squaresBetween) {
-            val nextCol = if (to.col > from.col) from.col + i else from.col - i
-            val nextRow = if (to.row > from.row) from.row + i else from.row - i
-            if (pieceTypeOnSquare(nextCol,nextRow) != PieceType.NONE) {
-                return false
-            }
-        }
-        return true
-    }
-
-    fun canRookMove(from: Square, to: Square): Boolean {
-        if (from.piece.color == to.piece.color) {
-            return false
-        }
-        else if (from.col == to.col && isClearVerticallyBetween(from, to) ||
-            from.row == to.row && isClearHorizontallyBetween(from, to)) {
-            return true
-        }
-        return false
-    }
-
-    fun generateRookMoves(fromSquare: Square): MutableList<Move> {
+    fun generateRookMoves(rookSquare: Square): MutableList<Move> {
         val validMoves = mutableListOf<Move>()
-        val row = fromSquare.row
-        val col = fromSquare.col
-        val movesUp = 7-row
-        val pinned = fromSquare.piece.pinned
-
-        if (pinned == PinnedState.NONE || pinned == PinnedState.VERTICAL) {
-            for (i in 1..movesUp) {
-                val toSquare = board[col][row + i]
-                if (canRookMove(fromSquare, toSquare)) {
-                    val isCapture = fromSquare.piece.color != Color.NONE
-                    val move = Move(fromSquare, toSquare, PieceType.ROOK, isCapture)
-                    validMoves.add(move)
-                }
-            }
-
-            for (i in 1..row) {
-                if (canRookMove(fromSquare, board[col][row - i])) {
-                    val isCapture = fromSquare.piece.color != Color.NONE
-                    val move = Move(fromSquare, board[col][row - i], PieceType.ROOK, isCapture)
-                    validMoves.add(move)
-                }
-            }
+        val row = rookSquare.row
+        val col = rookSquare.col
+        val pinned = rookSquare.piece.pinned
+        val ownColor = rookSquare.pieceColor
+        var squaresMoved = 1
+        val opponentColor = if (ownColor == Color.WHITE){
+            Color.BLACK
+        } else {
+            Color.WHITE
         }
-
-        val movesRight = 7-col
 
         if (pinned == PinnedState.NONE || pinned == PinnedState.HORIZONTAL) {
-            for (i in 1..movesRight) {
-                if (canRookMove(fromSquare, board[col + i][row])) {
-                    val isCapture = fromSquare.piece.color != Color.NONE
-                    val move = Move(fromSquare, board[col + i][row], PieceType.ROOK, isCapture)
+            //up moves
+            while (col + squaresMoved <= 7) {
+                val targetSquare = board[col + squaresMoved][row]
+                if (targetSquare.pieceColor== opponentColor){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.ROOK)
                     validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.pieceColor == ownColor){
+                    break
+                }
+                else if (targetSquare.pieceType == PieceType.NONE){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.ROOK)
+                    validMoves.add(move)
+                    squaresMoved ++
                 }
             }
 
-            for (i in 1..col) {
-                if (canRookMove(fromSquare, board[col - i][row])) {
-                    val isCapture = fromSquare.piece.color != Color.NONE
-                    val move = Move(fromSquare, board[col - i][row], PieceType.ROOK, isCapture)
+            squaresMoved = 1
+            //down moves
+            while (col - squaresMoved >= 0) {
+                val targetSquare = board[col - squaresMoved][row]
+                if (targetSquare.pieceColor == opponentColor){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.ROOK)
                     validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.pieceColor == ownColor){
+                    break
+                }
+                else if (targetSquare.pieceType == PieceType.NONE){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.ROOK)
+                    validMoves.add(move)
+                    squaresMoved ++
                 }
             }
         }
-        //todo use bishop moves method for optimization
+
+
+        if (pinned == PinnedState.NONE || pinned == PinnedState.VERTICAL) {
+            //right moves
+            squaresMoved = 1
+            while (row + squaresMoved <= 7) {
+                val targetSquare = board[col][row + squaresMoved]
+                if (targetSquare.pieceColor== opponentColor){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.ROOK)
+                    validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.pieceColor == ownColor){
+                    break
+                }
+                else if (targetSquare.pieceType == PieceType.NONE){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.ROOK)
+                    validMoves.add(move)
+                    squaresMoved ++
+                }
+            }
+            //left moves
+            squaresMoved = 1
+            while (row - squaresMoved >= 0) {
+                val targetSquare = board[col][row - squaresMoved]
+                if (targetSquare.pieceColor== opponentColor){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = true, piece = PieceType.ROOK)
+                    validMoves.add(move)
+                    break
+                }
+                else if (targetSquare.pieceColor == ownColor){
+                    break
+                }
+                else if (targetSquare.pieceType == PieceType.NONE){
+                    val move = Move(startSquare = rookSquare, endSquare = targetSquare,
+                        isCapture = false, piece = PieceType.ROOK)
+                    validMoves.add(move)
+                    squaresMoved ++
+                }
+            }
+        }
+
         return validMoves
     }
 
     fun checkForPins(kingSquare: Square) {
         //todo use actual king piece, track king locations on board
-        val ownColor = kingSquare.piece.color
+        val ownColor = kingSquare.pieceColor
         val opponentColor = if (ownColor == Color.WHITE){
             Color.BLACK
         } else {
@@ -375,13 +393,13 @@ class Chessboard {
     }
 
     fun pieceTypeOnSquare(col: Int, row: Int): PieceType {
-        return board[col][row].piece.type
+        return board[col][row].pieceType
     }
 
     fun generateValidKnightMoves(knightSquare: Square): MutableList<Move> {
         val col = knightSquare.col
         val row = knightSquare.row
-        val ownColor = knightSquare.piece.color
+        val ownColor = knightSquare.pieceColor
         val opponentColor = if (ownColor == Color.WHITE){
             Color.BLACK
         } else {
@@ -398,8 +416,8 @@ class Chessboard {
             for (move in knightMoves) {
                 if (col + move.first in 0..7 && row + move.second in 0..7) {
                     val targetSquare = board[col + move.first][row + move.second]
-                    if (targetSquare.piece.color != ownColor) {
-                        val isCapture = (targetSquare.piece.color == opponentColor)
+                    if (targetSquare.pieceColor != ownColor) {
+                        val isCapture = (targetSquare.pieceColor == opponentColor)
                         val move = Move(startSquare = knightSquare, endSquare = targetSquare,
                             isCapture = isCapture, piece = PieceType.KNIGHT)
                         validMoves.add(move)
@@ -439,28 +457,28 @@ class Chessboard {
     private fun generatePawnPushMoves(pawnSquare: Square): MutableList<Move> {
         val col = pawnSquare.col
         val row = pawnSquare.row
-        val ownColor = pawnSquare.piece.color
+        val ownColor = pawnSquare.pieceColor
         val validMoves = mutableListOf<Move>()
         if (pawnSquare.row == 1 && ownColor == Color.WHITE
-            && board[col][row+1].piece.type == PieceType.NONE
-            && board[col][row+2].piece.type == PieceType.NONE){
+            && board[col][row+1].pieceType == PieceType.NONE
+            && board[col][row+2].pieceType == PieceType.NONE){
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row+2],
                 isCapture = false, piece = PieceType.PAWN)
             validMoves.add(move)
         }
         else if (pawnSquare.row == 6 && ownColor == Color.BLACK
-            && board[col][row-1].piece.type == PieceType.NONE
-            && board[col][row-2].piece.type == PieceType.NONE) {
+            && board[col][row-1].pieceType == PieceType.NONE
+            && board[col][row-2].pieceType == PieceType.NONE) {
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row-2],
                 isCapture = false, piece = PieceType.PAWN)
             validMoves.add(move)
         }
-        if (ownColor == Color.WHITE && board[col][row+1].piece.type == PieceType.NONE){
+        if (ownColor == Color.WHITE && board[col][row+1].pieceType == PieceType.NONE){
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row+1],
                 isCapture = false, piece = PieceType.PAWN)
             validMoves.add(move)
         }
-        else if (ownColor == Color.BLACK && board[col][row-1].piece.type == PieceType.NONE) {
+        else if (ownColor == Color.BLACK && board[col][row-1].pieceType == PieceType.NONE) {
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row-1],
                 isCapture = false, piece = PieceType.PAWN)
             validMoves.add(move)
@@ -471,14 +489,14 @@ class Chessboard {
     private fun generatePawnCaptures(pawnSquare: Square): MutableList<Move> {
         val col = pawnSquare.col
         val row = pawnSquare.row
-        val ownColor = pawnSquare.piece.color
+        val ownColor = pawnSquare.pieceColor
         val validMoves = mutableListOf<Move>()
 
         if (ownColor == Color.WHITE) {
             if (pawnSquare.piece.pinned == PinnedState.NONE ||
                 pawnSquare.piece.pinned == PinnedState.DIAGONALA1H8
             ) {
-                if (col != 7 && board[col+1][row+1].piece.color == Color.BLACK){
+                if (col != 7 && board[col+1][row+1].pieceColor == Color.BLACK){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row+1],
                         isCapture = true, piece = PieceType.PAWN)
                     validMoves.add(move)
@@ -493,7 +511,7 @@ class Chessboard {
             if (pawnSquare.piece.pinned == PinnedState.NONE ||
                 pawnSquare.piece.pinned == PinnedState.DIAGONALA8H1
             ) {
-                if (col != 0 && board[col-1][row+1].piece.color == Color.BLACK){
+                if (col != 0 && board[col-1][row+1].pieceColor == Color.BLACK){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row+1],
                         isCapture = true, piece = PieceType.PAWN)
                     validMoves.add(move)
@@ -510,7 +528,7 @@ class Chessboard {
             if (pawnSquare.piece.pinned == PinnedState.NONE ||
                 pawnSquare.piece.pinned == PinnedState.DIAGONALA1H8
             ) {
-                if (col != 0 && board[col-1][row-1].piece.color == Color.WHITE){
+                if (col != 0 && board[col-1][row-1].pieceColor == Color.WHITE){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row-1],
                         isCapture = true, piece = PieceType.PAWN)
                     validMoves.add(move)
@@ -525,7 +543,7 @@ class Chessboard {
             if (pawnSquare.piece.pinned == PinnedState.NONE ||
                 pawnSquare.piece.pinned == PinnedState.DIAGONALA8H1
             ) {
-                if (col != 7 && board[col+1][row-1].piece.color == Color.WHITE){
+                if (col != 7 && board[col+1][row-1].pieceColor == Color.WHITE){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row-1],
                         isCapture = true, piece = PieceType.PAWN)
                     validMoves.add(move)
@@ -545,7 +563,7 @@ class Chessboard {
         val validMoves = mutableListOf<Move>()
         val col = bishopSquare.col
         val row = bishopSquare.row
-        val ownColor = bishopSquare.piece.color
+        val ownColor = bishopSquare.pieceColor
         val opponentColor = if (ownColor == Color.WHITE){
             Color.BLACK
         } else {
@@ -560,16 +578,16 @@ class Chessboard {
             // up right moves
             while (col + squaresMoved <= 7 && row + squaresMoved <= 7) {
                 val targetSquare = board[col + squaresMoved][row + squaresMoved]
-                if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = true, piece = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
-                else if (targetSquare.piece.color == ownColor){
+                else if (targetSquare.pieceColor == ownColor){
                     break
                 }
-                else if (targetSquare.piece.type == PieceType.NONE){
+                else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = false, piece = PieceType.BISHOP)
                     validMoves.add(move)
@@ -580,16 +598,16 @@ class Chessboard {
             squaresMoved = 1
             while (col - squaresMoved >= 0 && row -squaresMoved >= 0) {
                 val targetSquare = board[col - squaresMoved][row - squaresMoved]
-                if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = true, piece = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
-                else if (targetSquare.piece.color == ownColor){
+                else if (targetSquare.pieceColor == ownColor){
                     break
                 }
-                else if (targetSquare.piece.type == PieceType.NONE){
+                else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = false, piece = PieceType.BISHOP)
                     validMoves.add(move)
@@ -603,16 +621,16 @@ class Chessboard {
             // up left moves
             while (col - squaresMoved >= 0 && row + squaresMoved <= 7) {
                 val targetSquare = board[col - squaresMoved][row + squaresMoved]
-                if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = true, piece = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
-                else if (targetSquare.piece.color == ownColor){
+                else if (targetSquare.pieceColor == ownColor){
                     break
                 }
-                else if (targetSquare.piece.type == PieceType.NONE){
+                else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = false, piece = PieceType.BISHOP)
                     validMoves.add(move)
@@ -623,16 +641,16 @@ class Chessboard {
             // down right moves
             while (col + squaresMoved <= 7 && row - squaresMoved >= 0) {
                 val targetSquare = board[col + squaresMoved][row - squaresMoved]
-                if (targetSquare.piece.color == opponentColor){
+                if (targetSquare.pieceColor== opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = true, piece = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
-                else if (targetSquare.piece.color == ownColor){
+                else if (targetSquare.pieceColor == ownColor){
                     break
                 }
-                else if (targetSquare.piece.type == PieceType.NONE){
+                else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
                         isCapture = false, piece = PieceType.BISHOP)
                     validMoves.add(move)
@@ -651,7 +669,7 @@ class Chessboard {
         val validMoves = mutableListOf<Move>()
         val col = kingSquare.col
         val row = kingSquare.row
-        val ownColor = kingSquare.piece.color
+        val ownColor = kingSquare.pieceColor
         val opponentColor = if (ownColor == Color.WHITE){
             Color.BLACK
         } else {
@@ -664,8 +682,8 @@ class Chessboard {
         for (move in kingMoves){
             if (col + move.first in 0..7 && row + move.second in 0..7) {
                 val targetSquare = board[col + move.first][row + move.second]
-                if (targetSquare.piece.color != ownColor && !isKingInCheck(targetSquare,ownColor)) {
-                    val isCapture = targetSquare.piece.color == opponentColor
+                if (targetSquare.pieceColor != ownColor && !isKingInCheck(targetSquare,ownColor)) {
+                    val isCapture = targetSquare.pieceColor == opponentColor
                     val move = Move(
                         startSquare = kingSquare, endSquare = targetSquare,
                         isCapture = isCapture, piece = PieceType.KING
@@ -678,8 +696,8 @@ class Chessboard {
         //castling moves
         if (ownColor == Color.BLACK){
             if (blackCastleKingRights
-                && getSquare("f8").piece.type == PieceType.NONE
-                && getSquare("g8").piece.type == PieceType.NONE
+                && getSquare("f8").pieceType == PieceType.NONE
+                && getSquare("g8").pieceType == PieceType.NONE
                 && !isKingInCheck(getSquare("f8"),ownColor)
                 && !isKingInCheck(getSquare("g8"),ownColor)
 
@@ -690,8 +708,8 @@ class Chessboard {
 
             }
             if (blackCastleQueenRights
-                && getSquare("d8").piece.type == PieceType.NONE
-                && getSquare("c8").piece.type == PieceType.NONE
+                && getSquare("d8").pieceType == PieceType.NONE
+                && getSquare("c8").pieceType == PieceType.NONE
                 && !isKingInCheck(getSquare("d8"),ownColor)
                 && !isKingInCheck(getSquare("c8"),ownColor)
 
@@ -704,8 +722,8 @@ class Chessboard {
         }
         else if (ownColor == Color.WHITE){
             if (whiteCastleKingRights
-                && getSquare("f1").piece.type == PieceType.NONE
-                && getSquare("g1").piece.type == PieceType.NONE
+                && getSquare("f1").pieceType == PieceType.NONE
+                && getSquare("g1").pieceType == PieceType.NONE
                 && !isKingInCheck(getSquare("f1"),ownColor)
                 && !isKingInCheck(getSquare("g1"),ownColor)
 
@@ -716,8 +734,8 @@ class Chessboard {
 
             }
             if (whiteCastleQueenRights
-                && getSquare("d1").piece.type == PieceType.NONE
-                && getSquare("c1").piece.type == PieceType.NONE
+                && getSquare("d1").pieceType == PieceType.NONE
+                && getSquare("c1").pieceType == PieceType.NONE
                 && !isKingInCheck(getSquare("d1"),ownColor)
                 && !isKingInCheck(getSquare("c1"),ownColor)
 
@@ -738,7 +756,7 @@ class Chessboard {
             color
         }
         else {
-            kingSquare.piece.color
+            kingSquare.pieceColor
         }
 
         val opponentColor = if (ownColor == Color.WHITE){
@@ -751,23 +769,23 @@ class Chessboard {
         //pawns
 
         if (ownColor == Color.WHITE) {
-            if (col > 0 && row < 7 && board[col - 1][row + 1].piece.type == PieceType.PAWN
-                && board[col - 1][row + 1].piece.color == Color.BLACK) {
+            if (col > 0 && row < 7 && board[col - 1][row + 1].pieceType == PieceType.PAWN
+                && board[col - 1][row + 1].pieceColor == Color.BLACK) {
                 return true
             }
-            else if (col < 7 && row < 7 && board[col + 1][row + 1].piece.type == PieceType.PAWN
-                && board[col + 1][row + 1].piece.color == Color.BLACK
+            else if (col < 7 && row < 7 && board[col + 1][row + 1].pieceType == PieceType.PAWN
+                && board[col + 1][row + 1].pieceColor == Color.BLACK
             ) {
                 return true
             }
         }
         else if (ownColor == Color.BLACK) {
-            if (col > 0 &&  row > 0 && board[col - 1][row - 1].piece.type == PieceType.PAWN
-                && board[col - 1][row - 1].piece.color == Color.WHITE) {
+            if (col > 0 &&  row > 0 && board[col - 1][row - 1].pieceType == PieceType.PAWN
+                && board[col - 1][row - 1].pieceColor == Color.WHITE) {
                 return true
             }
-            else if (col < 7 &&  row > 0 && board[col + 1][row - 1].piece.type == PieceType.PAWN
-                && board[col + 1][row - 1].piece.color == Color.WHITE
+            else if (col < 7 &&  row > 0 && board[col + 1][row - 1].pieceType == PieceType.PAWN
+                && board[col + 1][row - 1].pieceColor == Color.WHITE
             ) {
                 return true
             }
@@ -789,8 +807,8 @@ class Chessboard {
             if (targetCol in 0..7
                 && targetRow in 0..7) {
                 val targetSquare = board[targetCol][targetRow]
-                if (targetSquare.piece.type == PieceType.KNIGHT
-                    && targetSquare.piece.color == opponentColor) {
+                if (targetSquare.pieceType == PieceType.KNIGHT
+                    && targetSquare.pieceColor == opponentColor) {
                     return true
                     //todo try catch for index oob?
                 }
@@ -802,16 +820,16 @@ class Chessboard {
         var squaresChecked = 1
         while (col - squaresChecked >= 0 && row + squaresChecked <= 7) {
             val targetSquare = board[col - squaresChecked][row + squaresChecked]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.BISHOP ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.BISHOP ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break
@@ -821,16 +839,16 @@ class Chessboard {
         squaresChecked = 1
         while (col + squaresChecked <= 7 && row + squaresChecked <= 7) {
             val targetSquare = board[col + squaresChecked][row + squaresChecked]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.BISHOP ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.BISHOP ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break
@@ -840,16 +858,16 @@ class Chessboard {
         squaresChecked = 1
         while (col + squaresChecked <= 7 && row - squaresChecked >=0) {
             val targetSquare = board[col + squaresChecked][row - squaresChecked]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.BISHOP ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.BISHOP ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break
@@ -859,16 +877,16 @@ class Chessboard {
         squaresChecked = 1
         while (col - squaresChecked >= 0 && row - squaresChecked >= 0) {
             val targetSquare = board[col - squaresChecked][row - squaresChecked]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.BISHOP ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.BISHOP ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break
@@ -880,16 +898,16 @@ class Chessboard {
         squaresChecked = 1
         while (row + squaresChecked <= 7) {
             val targetSquare = board[col][row + squaresChecked]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.ROOK ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.ROOK ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break
@@ -899,16 +917,16 @@ class Chessboard {
         squaresChecked = 1
         while (row - squaresChecked >= 0) {
             val targetSquare = board[col][row - squaresChecked]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.ROOK ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.ROOK ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break
@@ -918,16 +936,16 @@ class Chessboard {
         squaresChecked = 1
         while (col + squaresChecked <=7 ) {
             val targetSquare = board[col + squaresChecked][row]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.ROOK ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.ROOK ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break
@@ -937,16 +955,16 @@ class Chessboard {
         squaresChecked = 1
         while (col - squaresChecked >= 0 ) {
             val targetSquare = board[col - squaresChecked][row]
-            if (targetSquare.piece.color == Color.NONE){
+            if (targetSquare.pieceColor == Color.NONE){
                 squaresChecked ++
                 continue
             }
-            else if (targetSquare.piece.color == ownColor){
+            else if (targetSquare.pieceColor == ownColor){
                 break
             }
-            else if (targetSquare.piece.color == opponentColor){
-                if (targetSquare.piece.type == PieceType.ROOK ||
-                    targetSquare.piece.type == PieceType.QUEEN){
+            else if (targetSquare.pieceColor == opponentColor){
+                if (targetSquare.pieceType == PieceType.ROOK ||
+                    targetSquare.pieceType == PieceType.QUEEN){
                     return true
                 }
                 break

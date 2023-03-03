@@ -9,6 +9,9 @@ class Square(val row: Int, val col: Int) {
         Color.WHITE
     }
 
+    val pieceColor get() = this.piece.color
+    val pieceType get() = this.piece.type
+
     override fun equals(other: Any?): Boolean {
         return if (other is Square){
             this.col == other.col && this.row == other.row

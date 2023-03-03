@@ -10,7 +10,7 @@ class Rook(val color: Color,val square: Square) {
         val target = move.endSquare
 
         // own piece in square, cannot move
-        if (target.piece != null && target.piece.color == color) {
+        if (target.piece != null && target.pieceColor == color) {
             return false
         }
         //cannot move to current square
