@@ -9,17 +9,20 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.DragEvent
+import android.view.MotionEvent
 import android.view.View
+import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import com.pinguapps.chesstrainer.R
 import com.pinguapps.chesstrainer.data.Chessboard
 import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
+import kotlin.math.floor
 
 
 class ChessView : View {
     private var board = Chessboard()
-
+    val canvas = Canvas()
 
     constructor(context: Context?) : super(context) {
         init()
@@ -41,15 +44,17 @@ class ChessView : View {
         WHITE_PAINT.color = Color.rgb(207, 151, 85)
         BLACK_PAINT.color = Color.rgb(66, 33, 21)
         //todo load actual colors thems etc
-
+        draw(this.canvas)
     }
 
     override fun onDraw(canvas: Canvas) {
         drawBoard(canvas)
         drawPieces(canvas)
+        drawValidMoves(canvas)
+
     }
 
-    fun drawBoard(canvas: Canvas) {
+    private fun drawBoard(canvas: Canvas) {
         val tileSize = width.coerceAtMost(height) / 8
         for (col in 0..7) for (row in 0..7) {
             val paint: Paint =
@@ -109,17 +114,80 @@ class ChessView : View {
         )
     }
 
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+
+        when (event.action) {
+            MotionEvent.ACTION_MOVE -> {
+            }
+            MotionEvent.ACTION_DOWN -> {
+
+            }
+            MotionEvent.ACTION_UP -> {
+                val tileSize = height.coerceAtMost(width) / 8
+                val x: Float = event.x
+                val y: Float = event.y
+
+                val col = floor(x.div(tileSize)).toInt()
+                val row = floor(y.div(tileSize)).toInt()
+
+                if (row in 0..7 && col in 0..7) {
+                    val square = board.board[col][row]
+                    board.validMoves = board.generatePieceMoves(square)
+                    board.selectedSquare = square
+                    invalidate()
+                }
+            }
+        }
+        return true
+    }
+
+    fun drawValidMoves(canvas: Canvas) {
+        if (board.validMoves.size > 0) {
+            val square = board.selectedSquare
+            if (square != null &&square.pieceType != PieceType.NONE) {
+                val moves = board.generatePieceMoves(square)
+                for (move in moves) {
+                    val circleSquare = move.endSquare
+                    val tileSize = height.coerceAtMost(width) / 8
+                    val x: Int = circleSquare.col
+                    val y: Int = circleSquare.row
+                    val drawable: Drawable? =
+                        ResourcesCompat.getDrawable(resources, R.drawable.circle, null)
+                    val bitmapDrawable = (drawable as BitmapDrawable).bitmap
+                    canvas.drawBitmap(
+                        bitmapDrawable, null,
+                        Rect(x * tileSize, y * tileSize, (x + 1) * tileSize, (y + 1) * tileSize),
+                        null
+                    )
+                }
+                invalidate()
+            }
+
+        }
+    }
+
+    fun onDrag(view: View, dragEvent: DragEvent): Boolean {
+        val dragAction = dragEvent.action;
+        val dragView = dragEvent.localState;
+        val containsDragable: Boolean = when (dragAction) {
+            DragEvent.ACTION_DRAG_EXITED -> {
+                false
+            }
+            DragEvent.ACTION_DRAG_ENTERED -> {
+                true
+            }
+            else -> {true}
+        }
+        if (dragAction == DragEvent.ACTION_DROP && containsDragable){
+            //your function to move and check valid moves
+        }
+        return true;
+    }
+
     companion object {
         private val WHITE_PAINT: Paint = Paint()
         private val BLACK_PAINT: Paint = Paint()
     }
 
-    fun onDrag(v: View?, event: DragEvent): Boolean {
-        val startx = event.x
-        val starty = event.y
-        if (event.action == DragEvent.ACTION_DRAG_ENDED) {
-        }
-        return false
-    }
 }
 

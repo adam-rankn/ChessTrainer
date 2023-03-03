@@ -6,7 +6,10 @@ import kotlin.math.min
 
 class Chessboard {
 
+    //todo move some stuff to chessgame
     val board = Array(8) { row -> Array(8) { col -> Square(col,row) } }
+    var selectedSquare : Square? = null
+    var validMoves = mutableListOf<Move>()
 
     var whiteCastleQueenRights = true
     var whiteCastleKingRights  = true
@@ -93,29 +96,33 @@ class Chessboard {
     }
 
     fun generatePieceMoves(square: Square): MutableList<Move> {
-        val pieceType = square.pieceType
-        if(pieceType == PieceType.ROOK) {
-            return generateRookMoves(square)
+        return when (square.pieceType) {
+            PieceType.PAWN -> {
+                generateValidPawnMoves(square)
+            }
+            PieceType.BISHOP -> {
+                generateBishopMoves(square)
+            }
+            PieceType.KNIGHT -> {
+                generateValidKnightMoves(square)
+            }
+            PieceType.ROOK -> {
+                generateRookMoves(square)
+            }
+            PieceType.QUEEN -> {
+                generateQueenMoves(square)
+            }
+            PieceType.KING -> {
+                generateKingMoves(square)
+            }
+            else -> mutableListOf()
         }
-        else return mutableListOf()
     }
 
     fun placePiece(square: Square, color: Color, type: PieceType) {
         square.piece = Piece(color,type)
     }
 
-    fun isClearHorizontallyBetween(from: Square, to: Square): Boolean {
-        if (from.row != to.row) return false
-        val squaresBetween = abs(from.col - to.col) - 1
-        if (squaresBetween== 0 ) return true
-        for (i in 1..squaresBetween) {
-            val nextCol = if (to.col > from.col) from.col + i else from.col - i
-            if (pieceTypeOnSquare(nextCol,from.row) != PieceType.NONE) {
-                return false
-            }
-        }
-        return true
-    }
 
     fun generateRookMoves(rookSquare: Square): MutableList<Move> {
         val validMoves = mutableListOf<Move>()
@@ -179,7 +186,7 @@ class Chessboard {
             squaresMoved = 1
             while (row + squaresMoved <= 7) {
                 val targetSquare = board[col][row + squaresMoved]
-                if (targetSquare.pieceColor== opponentColor){
+                if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
                         isCapture = true, piece = PieceType.ROOK)
                     validMoves.add(move)
@@ -430,8 +437,7 @@ class Chessboard {
 
     fun generateValidPawnMoves(pawnSquare: Square): MutableList<Move> {
         val validMoves = mutableListOf<Move>()
-        val pinState = pawnSquare.piece.pinned
-        when (pinState) {
+        when (pawnSquare.piece.pinned) {
             PinnedState.NONE -> {
                 //push pawns or cap
                 validMoves.addAll(generatePawnPushMoves(pawnSquare))

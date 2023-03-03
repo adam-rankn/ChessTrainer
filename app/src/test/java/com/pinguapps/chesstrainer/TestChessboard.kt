@@ -78,26 +78,6 @@ class TestChessboard {
     }
 
     @Test
-    fun testClearHorizontally(){
-        val board = Chessboard()
-        val squareA1 = board.getSquare("a1")
-        val squareH1 = board.getSquare("h1")
-
-        assertEquals(false,board.isClearHorizontallyBetween(squareA1,squareH1))
-
-        val squareA4 = board.getSquare("a4")
-        val squareH4 = board.getSquare("h4")
-        assertEquals(true,board.isClearHorizontallyBetween(squareA4,squareH4))
-
-        val squareD1 = board.getSquare("d1")
-        val squareE1 = board.getSquare("e1")
-        assertEquals(true,board.isClearHorizontallyBetween(squareD1,squareE1))
-
-        board.makeMoveFromString("e2","e4")
-        assertEquals(false,board.isClearHorizontallyBetween(squareA4,squareH4))
-    }
-
-    @Test
     fun testFenString(){
         val board = Chessboard()
         board.loadPositionFenString("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b Kq - 1 2")

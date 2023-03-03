@@ -1,16 +1,11 @@
 package com.pinguapps.chesstrainer.ui
 
-import android.app.ActionBar.LayoutParams
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.pinguapps.chesstrainer.R
-import com.pinguapps.chesstrainer.data.Color
 import com.pinguapps.chesstrainer.databinding.FragmentChessboardBinding
 
 class ChessboardFragment: Fragment() {
@@ -28,7 +23,7 @@ class ChessboardFragment: Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentChessboardBinding.inflate(inflater, container, false)
         val view = binding.root
         val chessViewModel: ChessboardViewModel by activityViewModels()
