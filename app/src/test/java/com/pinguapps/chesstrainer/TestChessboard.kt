@@ -10,15 +10,15 @@ class TestChessboard {
     fun testFindSquare() {
         val board = Chessboard()
         val squareA1 = board.getSquare("a1")
-        assertEquals(0, squareA1.row)
+        assertEquals(7, squareA1.row)
         assertEquals(0, squareA1.col)
 
         val squareH8 = board.getSquare("h8")
-        assertEquals(7, squareH8.row)
+        assertEquals(0, squareH8.row)
         assertEquals(7, squareH8.col)
 
         val squareA8 = board.getSquare("a8")
-        assertEquals(7, squareA8.row)
+        assertEquals(0, squareA8.row)
         assertEquals(0, squareA8.col)
     }
 
@@ -29,9 +29,9 @@ class TestChessboard {
         val squareA2 = board.getSquare("a2")
         val squareA8 = board.getSquare("a8")
 
-        assertEquals(Color.BLACK,squareA1.squareColor)
+        assertEquals(Color.WHITE,squareA1.squareColor)
         assertEquals(Color.WHITE,squareA2.squareColor)
-        assertEquals(Color.WHITE,squareA8.squareColor)
+        assertEquals(Color.BLACK,squareA8.squareColor)
     }
     @Test
     fun testInitialPosition(){
@@ -218,6 +218,18 @@ class TestChessboard {
         val e5moves = board.generateValidPawnMoves(board.getSquare("e5"))
         assertEquals(1,e5moves.size)
 
+        //test pawns on edge of board
+        board.loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        val a2moves = board.generateValidPawnMoves(board.getSquare("a2"))
+        val h2moves = board.generateValidPawnMoves(board.getSquare("h2"))
+        val a7moves = board.generateValidPawnMoves(board.getSquare("a7"))
+        val h7moves = board.generateValidPawnMoves(board.getSquare("h7"))
+        assertEquals(2,a2moves.size)
+        assertEquals(2,a7moves.size)
+        assertEquals(2,h2moves.size)
+        assertEquals(2,h7moves.size)
+
+
     }
 
     @Test
@@ -227,6 +239,8 @@ class TestChessboard {
 
         //diagonal pin
         val d3moves = board.generateBishopMoves(board.getSquare("d3"))
+        for (move in d3moves)
+            println("${move.endSquare.col} ${move.endSquare.row}")
         assertEquals(3, d3moves.size)
 
         //horizontal pin

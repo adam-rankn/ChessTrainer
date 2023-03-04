@@ -12,17 +12,20 @@ import android.view.DragEvent
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import androidx.core.content.res.ResourcesCompat
 import com.pinguapps.chesstrainer.R
-import com.pinguapps.chesstrainer.data.Chessboard
+import com.pinguapps.chesstrainer.data.Chessgame
 import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
+import kotlin.math.abs
 import kotlin.math.floor
 
 
 class ChessView : View {
-    private var board = Chessboard()
-    val canvas = Canvas()
+    private var game = Chessgame()
+    private var board = game.chessboard
+    private var playerColor = game.playerColor
 
     constructor(context: Context?) : super(context) {
         init()
@@ -44,7 +47,6 @@ class ChessView : View {
         WHITE_PAINT.color = Color.rgb(207, 151, 85)
         BLACK_PAINT.color = Color.rgb(66, 33, 21)
         //todo load actual colors thems etc
-        draw(this.canvas)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -55,24 +57,50 @@ class ChessView : View {
     }
 
     private fun drawBoard(canvas: Canvas) {
-        val tileSize = width.coerceAtMost(height) / 8
-        for (col in 0..7) for (row in 0..7) {
-            val paint: Paint =
-                if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
-            canvas.drawRect(
-                (col * tileSize).toFloat(),
-                (row * tileSize).toFloat(),
-                ((col + 1) * tileSize).toFloat(),
-                ((row + 1) * tileSize).toFloat(),
-                paint
-            )
+        //todo flipped board for black
+        if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+            val tileSize = width.coerceAtMost(height) / 8
+            for (col in 0..7) for (row in 0..7) {
+                val paint: Paint =
+                    if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
+                canvas.drawRect(
+                    (col * tileSize).toFloat(),
+                    (row * tileSize).toFloat(),
+                    ((col + 1) * tileSize).toFloat(),
+                    ((row + 1) * tileSize).toFloat(),
+                    paint
+                )
+            }
+        }
+        else {
+            val tileSize = width.coerceAtMost(height) / 8
+            for (col in 0..7) for (row in 0..7) {
+                val paint: Paint =
+                    if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
+                canvas.drawRect(
+                    (col * tileSize).toFloat(),
+                    (abs(row-7)  * tileSize).toFloat(),
+                    ((col + 1) * tileSize).toFloat(),
+                    ((abs(row-7)  + 1) * tileSize).toFloat(),
+                    paint
+                )
+            }
         }
     }
 
     private fun drawPieces(canvas: Canvas) {
-        for (col in 0 .. 7) for (row in 0 .. 7) {
-            val square = board.board[col][row]
-            drawPiece(canvas, square)
+        //todo flipped board for black
+        if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+            for (col in 0..7) for (row in 0..7) {
+                val square = board.board[col][row]
+                drawPiece(canvas, square)
+            }
+        }
+        else {
+            for (col in 0..7) for (row in 0..7) {
+                val square = board.board[col][row]
+                drawPiece(canvas, square)
+            }
         }
     }
 
@@ -102,16 +130,30 @@ class ChessView : View {
     }
 
     private fun drawPicture(canvas: Canvas, square: Square, picture: Int) {
-        val tileSize = height.coerceAtMost(width) / 8
-        val x: Int = square.col
-        val y: Int = square.row
-        val drawable: Drawable? = ResourcesCompat.getDrawable(resources, picture, null)
-        val bitmapDrawable = (drawable as BitmapDrawable).bitmap
-        canvas.drawBitmap(
-            bitmapDrawable, null,
-            Rect(x * tileSize, y * tileSize, (x + 1) * tileSize, (y + 1) * tileSize),
-            null
-        )
+        if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+            val tileSize = height.coerceAtMost(width) / 8
+            val x: Int = square.col
+            val y: Int = square.row
+            val drawable: Drawable? = ResourcesCompat.getDrawable(resources, picture, null)
+            val bitmapDrawable = (drawable as BitmapDrawable).bitmap
+            canvas.drawBitmap(
+                bitmapDrawable, null,
+                Rect(x * tileSize, y * tileSize, (x + 1) * tileSize, (y + 1) * tileSize),
+                null
+            )
+        }
+        else {
+            val tileSize = height.coerceAtMost(width) / 8
+            val x: Int = abs(7 -square.col)
+            val y: Int = abs(7 - square.row)
+            val drawable: Drawable? = ResourcesCompat.getDrawable(resources, picture, null)
+            val bitmapDrawable = (drawable as BitmapDrawable).bitmap
+            canvas.drawBitmap(
+                bitmapDrawable, null,
+                Rect(x * tileSize, y * tileSize, (x + 1) * tileSize, (y + 1) * tileSize),
+                null
+            )
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -132,9 +174,19 @@ class ChessView : View {
 
                 if (row in 0..7 && col in 0..7) {
                     val square = board.board[col][row]
-                    board.validMoves = board.generatePieceMoves(square)
-                    board.selectedSquare = square
-                    invalidate()
+                    Toast.makeText(context,
+                    "you clicked on ${square.col} ${square.row} ${square.pieceColor} ${square.pieceType}",
+                        LENGTH_SHORT).show()
+
+                    if (square.pieceType != PieceType.NONE) {
+                        board.validMoves = board.generatePieceMoves(square)
+                        board.selectedSquare = square
+                        invalidate()
+                    }
+                    else {
+                        board.selectedSquare = null
+                        board.validMoves = mutableListOf()
+                    }
                 }
             }
         }
