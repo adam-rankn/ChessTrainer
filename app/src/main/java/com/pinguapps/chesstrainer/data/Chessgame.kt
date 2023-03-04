@@ -7,6 +7,7 @@ class Chessgame(color: Color= Color.WHITE) {
     val chessboard: Chessboard = Chessboard()
 
     val playerColor = color
+    val toMove = Color.WHITE
 
     val moveHistory: Stack<Move> = Stack<Move>()
     //todo add moves to stack
@@ -17,6 +18,8 @@ class Chessgame(color: Color= Color.WHITE) {
     var whiteCastleKingRights  = true
     var blackCastleQueenRights = true
     var blackCastleKingRights  = true
+
+
     fun loadPositionFenString(fenString: String){
         clearBoard()
         val typeHashMap = hashMapOf(

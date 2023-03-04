@@ -15,6 +15,7 @@ class Chessboard {
 
     var selectedSquare : Square? = null
     var validMoves = mutableListOf<Move>()
+    var turn = Color.WHITE
 
     var whiteCastleQueenRights = true
     var whiteCastleKingRights  = true
@@ -95,6 +96,73 @@ class Chessboard {
         board[endCol][endRow].piece = piece
         placePiece(endSquare, piece.color, piece.type)
 
+    }
+
+    fun isMoveValid(square: Square): Boolean {
+        for (move in validMoves){
+            if (move.endSquare == square){
+                return true
+            }
+        }
+        return false
+    }
+
+    fun makeMove(square: Square){
+
+
+        for (move in validMoves){
+            if (move.endSquare == square){
+                //make move
+                square.piece = selectedSquare!!.piece
+                selectedSquare!!.piece = Piece(Color.NONE, PieceType.NONE)
+                println("${move.castling}")
+                if (move.castling != Castleing.NONE){
+                    when (move.castling)  {
+                        Castleing.BLACK_KING -> {
+                            board[7][0].piece = Piece(Color.NONE,PieceType.NONE)
+                            board[5][0].piece = Piece(Color.BLACK,PieceType.ROOK)
+                            blackCastleKingRights = false
+                            blackCastleQueenRights = false
+                        }
+                        Castleing.BLACK_QUEEN -> {
+                            board[0][0].piece = Piece(Color.NONE,PieceType.NONE)
+                            board[3][0].piece = Piece(Color.BLACK,PieceType.ROOK)
+                            blackCastleKingRights = false
+                            blackCastleQueenRights = false
+
+                        }
+                        Castleing.WHITE_KING -> {
+                            board[7][7].piece = Piece(Color.NONE,PieceType.NONE)
+                            board[5][7].piece = Piece(Color.WHITE,PieceType.ROOK)
+                            whiteCastleKingRights = false
+                            whiteCastleQueenRights = false
+                        }
+                        Castleing.WHITE_QUEEN -> {
+                            board[0][7].piece = Piece(Color.NONE,PieceType.NONE)
+                            board[3][7].piece = Piece(Color.WHITE,PieceType.ROOK)
+                            whiteCastleKingRights = false
+                            whiteCastleQueenRights = false
+
+                        }
+                        else -> {}
+
+                    }
+                }
+                selectedSquare = null
+                validMoves = mutableListOf()
+            }
+        }
+
+        if (turn == Color.WHITE){
+            turn = Color.BLACK
+            checkForPins(blackKingSquare)
+        }
+        else {
+            turn = Color.WHITE
+            checkForPins(whiteKingSquare)
+        }
+
+        //todo check en passants
     }
 
     fun makeMoveFromString(startStr: String, endStr: String){
@@ -419,6 +487,7 @@ class Chessboard {
         return board[col][row].pieceType
     }
 
+
     fun generateValidKnightMoves(knightSquare: Square): MutableList<Move> {
         val col = knightSquare.col
         val row = knightSquare.row
@@ -725,19 +794,22 @@ class Chessboard {
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("g8"),
-                    isCapture = false, piece = PieceType.KING, notation = "o-o")
+                    isCapture = false, piece = PieceType.KING, notation = "o-o",
+                castling = Castleing.BLACK_KING)
                 validMoves.add(move)
 
             }
             if (blackCastleQueenRights
                 && getSquare("d8").pieceType == PieceType.NONE
                 && getSquare("c8").pieceType == PieceType.NONE
+                && getSquare("b8").pieceType == PieceType.NONE
                 && !isKingInCheck(getSquare("d8"),ownColor)
                 && !isKingInCheck(getSquare("c8"),ownColor)
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("c8"),
-                    isCapture = false, piece = PieceType.KING, notation = "o-o-o")
+                    isCapture = false, piece = PieceType.KING, notation = "o-o-o",
+                    castling = Castleing.BLACK_QUEEN)
                 validMoves.add(move)
 
             }
@@ -751,19 +823,22 @@ class Chessboard {
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("g1"),
-                    isCapture = false, piece = PieceType.KING, notation = "O-O")
+                    isCapture = false, piece = PieceType.KING, notation = "O-O",
+                    castling = Castleing.WHITE_KING)
                 validMoves.add(move)
 
             }
             if (whiteCastleQueenRights
                 && getSquare("d1").pieceType == PieceType.NONE
                 && getSquare("c1").pieceType == PieceType.NONE
+                && getSquare("b1").pieceType == PieceType.NONE
                 && !isKingInCheck(getSquare("d1"),ownColor)
                 && !isKingInCheck(getSquare("c1"),ownColor)
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("c1"),
-                    isCapture = false, piece = PieceType.KING, notation = "O-O-O")
+                    isCapture = false, piece = PieceType.KING, notation = "O-O-O",
+                    castling = Castleing.WHITE_QUEEN)
                 validMoves.add(move)
             }
         }

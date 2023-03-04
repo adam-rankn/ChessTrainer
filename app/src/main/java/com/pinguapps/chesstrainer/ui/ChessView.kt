@@ -172,24 +172,34 @@ class ChessView : View {
                 val col = floor(x.div(tileSize)).toInt()
                 val row = floor(y.div(tileSize)).toInt()
 
-                if (row in 0..7 && col in 0..7) {
-                    val square = board.board[col][row]
-                    Toast.makeText(context,
-                    "you clicked on ${square.col} ${square.row} ${square.pieceColor} ${square.pieceType}",
-                        LENGTH_SHORT).show()
 
-                    if (square.pieceType != PieceType.NONE) {
-                        board.validMoves = board.generatePieceMoves(square)
-                        board.selectedSquare = square
+
+                if (row in 0..7 && col in 0..7) {
+                    val highlightedSquare = board.selectedSquare
+                    val clickedSquare = board.board[col][row]
+
+                    if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
+                        board.makeMove(clickedSquare)
                         invalidate()
-                    }
-                    else {
+                    } else {
+
+/*                    Toast.makeText(context,
+                    "you clicked on ${square.col} ${square.row} ${square.pieceColor} ${square.pieceType}",
+                        LENGTH_SHORT).show()*/
+
+                    if (clickedSquare.pieceType != PieceType.NONE && board.turn == clickedSquare.pieceColor) {
+                        //todo add check for player color
+                        board.validMoves = board.generatePieceMoves(clickedSquare)
+                        board.selectedSquare = clickedSquare
+                        invalidate()
+                    } else {
                         board.selectedSquare = null
                         board.validMoves = mutableListOf()
                     }
                 }
+                }
             }
-        }
+            }
         return true
     }
 

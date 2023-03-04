@@ -5,7 +5,8 @@ class Move(
     val startSquare: Square,
     val piece: PieceType,
     val isCapture: Boolean = false,
-    val notation: String = ""
+    val notation: String = "",
+    val castling: Castleing = Castleing.NONE
 ) {
 
     //todo
