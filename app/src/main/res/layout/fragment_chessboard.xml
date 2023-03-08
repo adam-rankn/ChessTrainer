@@ -5,12 +5,12 @@
     android:orientation="horizontal">
 
 
-
-
     <com.pinguapps.chesstrainer.ui.ChessView
+        android:id="@+id/chessboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_margin="8dp">
     </com.pinguapps.chesstrainer.ui.ChessView>
 
 

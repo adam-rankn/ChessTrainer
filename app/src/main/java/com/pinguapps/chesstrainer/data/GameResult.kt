@@ -1,0 +1,14 @@
+package com.pinguapps.chesstrainer.data
+
+enum class GameResult {
+    GAME_IN_PROGRESS,
+    BLACK_WIN_CHECKMATE,
+    WHITE_WIN_CHECKMATE,
+    BLACK_WIN_RESIGNATION,
+    WHITE_WIN_RESIGNATION,
+    DRAW_BY_AGREEMENT,
+    DRAW_BY_REPETITION,
+    DRAW_BY_FIFTY,
+    DRAW_BY_INSUFFICIENT,
+    DRAW_BY_STALEMATE
+}

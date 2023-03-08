@@ -2,13 +2,12 @@ package com.pinguapps.chesstrainer.data
 
 import java.util.Stack
 
-class Chessgame(color: Color= Color.WHITE) {
+class Chessgame(color: Color= Color.BLACK) {
 
     val chessboard: Chessboard = Chessboard()
 
     val playerColor = color
     val toMove = Color.WHITE
-
     val moveHistory: Stack<Move> = Stack<Move>()
     //todo add moves to stack
     var selectedSquare : Square? = null
@@ -20,6 +19,9 @@ class Chessgame(color: Color= Color.WHITE) {
     var blackCastleKingRights  = true
 
 
+    init {
+        chessboard.playerColor = playerColor
+    }
     fun loadPositionFenString(fenString: String){
         clearBoard()
         val typeHashMap = hashMapOf(

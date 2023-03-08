@@ -30,26 +30,8 @@ class ChessboardFragment: Fragment() {
 
         val board = chessViewModel.chessboard
 
-/*        val  layoutParams = LinearLayout.LayoutParams(0,0,
-        1.0f)
-
-        for (col in 0..7) {
-            val columnLayout = LinearLayout(context)
-            for (row in 0..7){
-                val layout = LinearLayout(context)
-                if (row + col % 2 == 0) {
-                    layout.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.black))
-                }
-                else {
-                    layout.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.white))
-                }
-                layout.layoutParams = layoutParams
-                columnLayout.addView(layout)
-            }
-            columnLayout.layoutParams = layoutParams
-            chessboardLayout.addView(columnLayout)
-        }*/
-
+        val boardView = binding.chessboard
+        //boardView.layoutParams = LinearLayout.LayoutParams(boardView.width,boardView.width)
 
         return view
     }
