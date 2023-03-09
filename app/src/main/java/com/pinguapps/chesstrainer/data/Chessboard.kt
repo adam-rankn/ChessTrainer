@@ -32,8 +32,9 @@ class Chessboard {
     var blackKingSquare = getSquare("e8")
     var whiteInCheck = false
     var blackInCheck = false
-    var moveCounter = 0
+    var moveCounter = 1
     var fiftyMoveCounter = 0
+    val positionMap = mutableMapOf<String,Int>()
 
     init {
         loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -226,13 +227,24 @@ class Chessboard {
             turn = Color.BLACK
             checkForPins(blackKingSquare)
             blackInCheck = isKingInCheck(blackKingSquare)
+            whiteInCheck = false
         }
         else {
             turn = Color.WHITE
             checkForPins(whiteKingSquare)
             whiteInCheck = isKingInCheck(whiteKingSquare)
+            blackInCheck = false
+            moveCounter++
         }
-        moveCounter++
+
+        //check for threefold repetition
+        val fenString = getFenStringFromPosition()
+        positionMap[fenString] = (positionMap[fenString] ?:0) +1
+
+        if (positionMap.containsValue(3)){
+            result = GameResult.DRAW_BY_REPETITION
+        }
+
 
         //todo update checkmate state
     }
@@ -1237,9 +1249,18 @@ class Chessboard {
         checkForPins(blackKingSquare)
         checkForPins(whiteKingSquare)
 
-        //todo en passant
-        //todo 50 move counter/half moves
-        //todo full move ctr
+        val fenList = fenString.split(" ")
+        val passantString = fenList[3]
+        val halfMoveString = fenList[4]
+        val fullMoveString = fenList[5]
+
+        fiftyMoveCounter = halfMoveString.toInt()
+        moveCounter = fullMoveString.toInt()
+        enPassantSquare = if (passantString != "-") {
+            getSquare(passantString)
+        } else {
+            null
+        }
     }
 
     fun getFenStringFromPosition(): String {
@@ -1289,25 +1310,33 @@ class Chessboard {
             fenString += " b "
         }
 
+        var castlingString = ""
         if (whiteCastleKingRights){
-            fenString += "K"
+            castlingString += "K"
         }
         if (whiteCastleQueenRights){
-            fenString += "Q"
+            castlingString += "Q"
         }
         if (blackCastleKingRights){
-            fenString += "k"
+            castlingString += "k"
         }
         if (blackCastleQueenRights){
-            fenString += "q"
+            castlingString += "q"
         }
-        fenString +=" - 0 1"
+
+        if (castlingString != ""){
+            fenString += castlingString
+        }
+        else {
+            fenString += "-"
+        }
+        fenString +=" - "  //en passant, todo
         fenString += fiftyMoveCounter.toString()
+        fenString +=" "
+        fenString += moveCounter.toString()
 
 
         //todo en passant
-        //todo 50 move counter/half moves
-        //todo full move ctr
         return fenString
 
     }

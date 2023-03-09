@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:orientation="horizontal">
 
-
     <com.pinguapps.chesstrainer.ui.ChessView
         android:id="@+id/chessboard"
         android:layout_width="match_parent"
@@ -12,7 +11,5 @@
         android:orientation="horizontal"
         android:layout_margin="8dp">
     </com.pinguapps.chesstrainer.ui.ChessView>
-
-
 
 </LinearLayout>

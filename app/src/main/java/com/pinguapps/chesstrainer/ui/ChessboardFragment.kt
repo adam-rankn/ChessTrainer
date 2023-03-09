@@ -28,9 +28,8 @@ class ChessboardFragment: Fragment() {
         val view = binding.root
         val chessViewModel: ChessboardViewModel by activityViewModels()
 
-        val board = chessViewModel.chessboard
-
         val boardView = binding.chessboard
+        boardView.game = chessViewModel.chessgame
         //boardView.layoutParams = LinearLayout.LayoutParams(boardView.width,boardView.width)
 
         return view

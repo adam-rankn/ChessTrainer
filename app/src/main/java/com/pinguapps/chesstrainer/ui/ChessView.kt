@@ -23,7 +23,7 @@ import kotlin.math.floor
 
 
 class ChessView : View {
-    private var game = Chessgame()
+    var game = Chessgame()
     private var board = game.chessboard
     private var playerColor = game.playerColor
 
@@ -49,6 +49,12 @@ class ChessView : View {
         //todo load actual colors thems etc
     }
 
+
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, widthMeasureSpec )
+    }
+
     override fun onDraw(canvas: Canvas) {
         if (playerColor == com.pinguapps.chesstrainer.data.Color.BLACK){
             //canvas.rotate(180f)
@@ -63,7 +69,6 @@ class ChessView : View {
     }
 
     private fun drawBoard(canvas: Canvas) {
-        //todo flipped board for black
         if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             val tileSize = width.coerceAtMost(height) / 8
             for (col in 0..7) for (row in 0..7) {
@@ -95,7 +100,6 @@ class ChessView : View {
     }
 
     private fun drawPieces(canvas: Canvas) {
-        //todo flipped board for black
         if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             for (col in 0..7) for (row in 0..7) {
                 val square = board.board[col][row]

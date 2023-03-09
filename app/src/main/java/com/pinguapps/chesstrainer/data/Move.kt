@@ -10,6 +10,10 @@ class Move(
     val enPassantSquare: Square? = null,
 ) {
 
-    //todo
+    //todo notation
+
+    init {
+        val notation = ""
+    }
 
 }
