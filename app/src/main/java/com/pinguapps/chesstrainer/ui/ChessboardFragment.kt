@@ -7,6 +7,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.pinguapps.chesstrainer.databinding.FragmentChessboardBinding
+import com.pinguapps.chesstrainer.logic.PassedPawnPuzzle
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewTreeLifecycleOwner
 
 class ChessboardFragment: Fragment() {
 
@@ -29,8 +33,16 @@ class ChessboardFragment: Fragment() {
         val chessViewModel: ChessboardViewModel by activityViewModels()
 
         val boardView = binding.chessboard
-        boardView.game = chessViewModel.chessgame
-        //boardView.layoutParams = LinearLayout.LayoutParams(boardView.width,boardView.width)
+        ViewTreeLifecycleOwner.set(boardView, this)
+
+
+        val puzzleGen = PassedPawnPuzzle()
+        puzzleGen.generateBasicPuzzle()
+        boardView.game.chessboard = puzzleGen.chessboard
+        boardView.board = puzzleGen.chessboard
+        boardView.invalidate()
+        //boardView.game = chessViewModel.chessgame
+
 
         return view
     }

@@ -1,5 +1,6 @@
 package com.pinguapps.chesstrainer.data
 
+import androidx.lifecycle.MutableLiveData
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -34,7 +35,8 @@ class Chessboard {
     var blackInCheck = false
     var moveCounter = 1
     var fiftyMoveCounter = 0
-    val positionMap = mutableMapOf<String,Int>()
+    private val positionMap = mutableMapOf<String,Int>()
+    var promotionSquare = MutableLiveData<Square>()
 
     init {
         loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -140,7 +142,7 @@ class Chessboard {
 
 
         for (move in validMoves){
-            if (move.endSquare == square){
+            if (move.endSquare == square) {
                 // remove en passanted pawn
                 if (move.endSquare.pieceType == PieceType.NONE && move.isCapture){
                     if (turn == Color.WHITE){
@@ -152,6 +154,8 @@ class Chessboard {
                         board[move.endSquare.col][move.endSquare.row -1].piece = Piece(Color.NONE,PieceType.NONE)
                     }
                 }
+
+
                 //make move
                 if (selectedSquare != null){
                     square.piece = selectedSquare!!.piece
@@ -159,6 +163,20 @@ class Chessboard {
                 }
                 else {
                     break
+                }
+
+                //pawn promotion
+                if (move.piece == PieceType.PAWN) {
+                    if (move.endSquare.row == 0) {
+                        println("white promotes")
+                        promotionSquare.postValue(move.endSquare)
+
+                    }
+                    else if (move.endSquare.row == 7){
+                        println("blakk promotes")
+                        promotionSquare.postValue(move.endSquare)
+
+                    }
                 }
 
                 if (move.castling != Castleing.NONE){
@@ -220,7 +238,8 @@ class Chessboard {
                     result = GameResult.DRAW_BY_FIFTY
                 }
 
-            }
+
+            } //move == square
         }
 
         if (turn == Color.WHITE){
@@ -946,7 +965,8 @@ class Chessboard {
             return validMoves
     }
 
-    fun isKingInCheck(kingSquare: Square, color: Color = Color.NONE): Boolean{
+    fun isKingInCheck(kingSquare: Square,color: Color = Color.NONE): Boolean{
+
         val col = kingSquare.col
         val row = kingSquare.row
 
@@ -956,7 +976,6 @@ class Chessboard {
         else {
             kingSquare.pieceColor
         }
-
         val opponentColor = if (ownColor == Color.WHITE){
             Color.BLACK
         }
@@ -1181,6 +1200,20 @@ class Chessboard {
         }
 
     return false
+    }
+
+    fun promotePawn(square: Square, pieceType: PieceType, color: Color){
+        board[square.col][square.row].piece = Piece(color,pieceType)
+
+        if (color == Color.WHITE){
+            checkForPins(blackKingSquare)
+            isKingInCheck(blackKingSquare)
+        }
+        else {
+            checkForPins(whiteKingSquare)
+            isKingInCheck(whiteKingSquare)
+        }
+
     }
 
     fun loadPositionFenString(fenString: String){

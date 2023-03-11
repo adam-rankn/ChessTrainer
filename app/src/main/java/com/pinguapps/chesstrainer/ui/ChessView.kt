@@ -8,23 +8,24 @@ import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.view.DragEvent
-import android.view.MotionEvent
-import android.view.View
+import android.view.*
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.PopupWindow
 import android.widget.Toast
-import android.widget.Toast.LENGTH_SHORT
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.pinguapps.chesstrainer.R
 import com.pinguapps.chesstrainer.data.Chessgame
 import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
+import com.pinguapps.chesstrainer.databinding.PopupPawnPromotionBinding
 import kotlin.math.abs
 import kotlin.math.floor
 
 
 class ChessView : View {
     var game = Chessgame()
-    private var board = game.chessboard
+    var board = game.chessboard
     private var playerColor = game.playerColor
 
     constructor(context: Context?) : super(context) {
@@ -46,9 +47,78 @@ class ChessView : View {
     fun init() {
         WHITE_PAINT.color = Color.rgb(207, 151, 85)
         BLACK_PAINT.color = Color.rgb(66, 33, 21)
-        //todo load actual colors thems etc
+        //todo load actual colors themes etc
+
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+
+        findViewTreeLifecycleOwner()?.let {lifeCycleOwner ->
+            board.promotionSquare.observe(lifeCycleOwner) {square ->
+
+                val popupInflater = context.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
+                val popupBind = PopupPawnPromotionBinding.inflate(popupInflater as LayoutInflater)
+
+
+                if (square.pieceColor == com.pinguapps.chesstrainer.data.Color.WHITE) {
+                    val popupWhite = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, true)
+                    popupWhite.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
+                    popupBind.promotionKnight.setOnClickListener {
+                        board.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        invalidate()
+                        popupWhite.dismiss()
+                    }
+                    popupBind.promotionBishop.setOnClickListener {
+                        board.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        invalidate()
+                        popupWhite.dismiss()
+                    }
+                    popupBind.promotionRook.setOnClickListener {
+                        board.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        invalidate()
+                        popupWhite.dismiss()
+                    }
+                    popupBind.promotionQueen.setOnClickListener {
+                        board.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        invalidate()
+                        popupWhite.dismiss()
+                    }
+                }
+                else {
+                    popupBind.promotionKnight.setImageResource(R.drawable.b_knight)
+                    popupBind.promotionBishop.setImageResource(R.drawable.b_bishop)
+                    popupBind.promotionRook.setImageResource(R.drawable.b_rook)
+                    popupBind.promotionQueen.setImageResource(R.drawable.b_queen)
+
+                    val popupBlack = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, true)
+                    popupBlack.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
+
+                    popupBind.promotionKnight.setOnClickListener {
+                        board.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        invalidate()
+                        popupBlack.dismiss()
+                    }
+                    popupBind.promotionBishop.setOnClickListener {
+                        board.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        invalidate()
+                        popupBlack.dismiss()
+                    }
+                    popupBind.promotionRook.setOnClickListener {
+                        board.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        invalidate()
+                        popupBlack.dismiss()
+                    }
+                    popupBind.promotionQueen.setOnClickListener {
+                        board.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        invalidate()
+                        popupBlack.dismiss()
+                    }
+                }
+
+            }
+        }
+    }
 
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

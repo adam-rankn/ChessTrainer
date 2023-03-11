@@ -5,6 +5,7 @@ import org.junit.Test
 
 import org.junit.Assert.*
 
+
 class TestChessboard {
     @Test
     fun testFindSquare() {
@@ -425,7 +426,7 @@ class TestChessboard {
         board.loadPositionFenString(anotherFenString)
         assertEquals(anotherFenString,board.getFenStringFromPosition())
 
-        val fenString2Kings = "8/8/8/4k3/8/4K3/8/8 w - - 0 1"
+        val fenString2Kings = "8/8/8/4k3/8/4K3/8/8 w - - 17 34"
         board.loadPositionFenString(fenString2Kings)
         assertEquals(fenString2Kings,board.getFenStringFromPosition())
     }
@@ -435,9 +436,9 @@ class TestChessboard {
         val board = Chessboard()
         board.loadPositionFenString("rnbqkbnr/ppp2ppp/8/1B1pp3/3PP3/8/PPP2PPP/RNBQK1NR w KQkq - 0 1")
         assertEquals(true,board.isKingInCheck(board.blackKingSquare))
-
-        //val queenMoves = board.generatePieceMoves(board.getSquare("d8"))
-        //assertEquals(1,queenMoves.size)
+        val queenMoves = board.generatePieceMoves(board.getSquare("d8"))
+        board.validMoves = queenMoves
+        //assertEquals(1,board.validMoves.size)
     }
 
     @Test
@@ -446,8 +447,9 @@ class TestChessboard {
         board.loadPositionFenString("rnbqkbnr/ppp2ppp/3p4/3Pp3/8/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1")
         board.enPassantSquare = board.getSquare("e6")
         val moves = board.generatePieceMoves(board.getSquare("d5"))
-        assertNotNull(moves[0].enPassantSquare)
+        board.validMoves = moves
         board.makeMove(board.getSquare("e6"))
-       // assertEquals(PieceType.NONE,board.getSquare("e5").pieceType)
+        assertEquals(PieceType.NONE,board.getSquare("e5").pieceType)
     }
+
 }

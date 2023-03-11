@@ -2,9 +2,9 @@ package com.pinguapps.chesstrainer.data
 
 import java.util.Stack
 
-class Chessgame(color: Color= Color.BLACK) {
+class Chessgame(color: Color= Color.WHITE) {
 
-    val chessboard: Chessboard = Chessboard()
+    var chessboard: Chessboard = Chessboard()
 
     val playerColor = color
     val toMove = Color.WHITE
