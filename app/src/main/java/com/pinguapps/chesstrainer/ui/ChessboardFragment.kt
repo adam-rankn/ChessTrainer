@@ -8,8 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.pinguapps.chesstrainer.databinding.FragmentChessboardBinding
 import com.pinguapps.chesstrainer.logic.PassedPawnPuzzle
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewTreeLifecycleOwner
 
 class ChessboardFragment: Fragment() {

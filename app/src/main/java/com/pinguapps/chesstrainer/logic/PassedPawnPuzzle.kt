@@ -35,7 +35,7 @@ class PassedPawnPuzzle {
             chessboard.board[1][0].piece = Piece(opponent, PieceType.KING)
             chessboard.blackKingSquare = chessboard.board[1][0]
 
-            if(randomGenerator.nextInt(1,10) >= 2){
+            if(randomGenerator.nextInt(1,10) >= 5){
                 chessboard.board[0][1].piece = Piece(opponent, PieceType.PAWN)
             }
             if(randomGenerator.nextInt(1,10) >= 4){
@@ -112,8 +112,11 @@ class PassedPawnPuzzle {
         else {
              val row = (5..6).random()
         }
+    }
 
-
-
+    fun generateBathtubPuzzle(){
+        val whitePositionsList = listOf(
+            "k7/5pp1/4p2p/4P2P/5PP1/8/8/K7 w - - 0 1",
+            "k7/4pp2/3p2p1/3P2P1/4PP2/8/8/K7 w - - 0 1")
     }
 }

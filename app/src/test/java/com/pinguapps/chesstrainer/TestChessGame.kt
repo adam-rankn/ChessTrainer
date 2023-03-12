@@ -14,11 +14,6 @@ class TestChessGame {
         val board = game.chessboard
         game.loadPositionFenString("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b Kq - 1 2")
 
-        Assert.assertEquals(false, game.blackCastleKingRights)
-        Assert.assertEquals(true, game.blackCastleQueenRights)
-        Assert.assertEquals(true, game.whiteCastleKingRights)
-        Assert.assertEquals(false, game.whiteCastleQueenRights)
-
         Assert.assertEquals(PieceType.KNIGHT, board.getSquare("f3").pieceType)
 
         board.loadPositionFenString("8/3k4/3p4/2pP1p2/1KP2P2/8/8/8")

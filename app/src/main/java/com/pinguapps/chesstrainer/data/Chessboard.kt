@@ -27,7 +27,8 @@ class Chessboard {
     var blackCastleKingRights  = true
     var enPassantSquare: Square? = null
     val winner = Color.NONE
-    var result = GameResult.GAME_IN_PROGRESS
+    //var result = GameResult.GAME_IN_PROGRESS
+    val result = MutableLiveData<GameResult>(GameResult.GAME_IN_PROGRESS)
 
     var whiteKingSquare = getSquare("e1")
     var blackKingSquare = getSquare("e8")
@@ -235,36 +236,35 @@ class Chessboard {
                     fiftyMoveCounter ++
                 }
                 if (fiftyMoveCounter == 100){
-                    result = GameResult.DRAW_BY_FIFTY
+                    result.postValue(GameResult.DRAW_BY_FIFTY)
                 }
-
-
             } //move == square
         }
 
         if (turn == Color.WHITE){
-            turn = Color.BLACK
             checkForPins(blackKingSquare)
             blackInCheck = isKingInCheck(blackKingSquare)
             whiteInCheck = false
+            turn = Color.BLACK
         }
         else {
-            turn = Color.WHITE
+
             checkForPins(whiteKingSquare)
             whiteInCheck = isKingInCheck(whiteKingSquare)
             blackInCheck = false
             moveCounter++
+            turn = Color.WHITE
         }
 
         //check for threefold repetition
-        val fenString = getFenStringFromPosition()
+
+        //remove move counters
+        val fenString = getFenStringFromPosition().split(" ").take(4).joinToString(" ")
         positionMap[fenString] = (positionMap[fenString] ?:0) +1
 
         if (positionMap.containsValue(3)){
-            result = GameResult.DRAW_BY_REPETITION
+            result.postValue(GameResult.DRAW_BY_REPETITION)
         }
-
-
         //todo update checkmate state
     }
 
@@ -998,7 +998,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.BISHOP ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1)){
 
                     return true
                 }
@@ -1020,7 +1022,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.BISHOP ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1) ){
 
                     return true
                 }
@@ -1042,7 +1046,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.BISHOP ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1)){
 
                     return true
                 }
@@ -1064,7 +1070,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.BISHOP ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1)){
 
                     return true
                 }
@@ -1087,7 +1095,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.ROOK ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1)){
                     return true
                 }
                 break
@@ -1106,7 +1116,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.ROOK ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1)){
                     return true
                 }
                 break
@@ -1125,7 +1137,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.ROOK ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1)){
                     return true
                 }
                 break
@@ -1144,7 +1158,9 @@ class Chessboard {
             }
             else if (targetSquare.pieceColor == opponentColor){
                 if (targetSquare.pieceType == PieceType.ROOK ||
-                    targetSquare.pieceType == PieceType.QUEEN){
+                    targetSquare.pieceType == PieceType.QUEEN ||
+                    (targetSquare.pieceType == PieceType.KING &&
+                            squaresChecked == 1)){
                     return true
                 }
                 break
