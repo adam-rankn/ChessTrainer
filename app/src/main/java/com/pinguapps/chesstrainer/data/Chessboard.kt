@@ -1,5 +1,6 @@
 package com.pinguapps.chesstrainer.data
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import kotlin.math.abs
 import kotlin.math.min
@@ -14,7 +15,6 @@ class Chessboard {
         }
     }
 
-    val piecesList = mutableListOf<Piece>()
     var playerColor = Color.WHITE
 
     var selectedSquare : Square? = null
@@ -28,8 +28,7 @@ class Chessboard {
     var enPassantSquare: Square? = null
     val winner = Color.NONE
     //var result = GameResult.GAME_IN_PROGRESS
-    val result = MutableLiveData<GameResult>(GameResult.GAME_IN_PROGRESS)
-
+    val result = MutableLiveData(GameResult.GAME_IN_PROGRESS)
     var whiteKingSquare = getSquare("e1")
     var blackKingSquare = getSquare("e8")
     var whiteInCheck = false
@@ -63,12 +62,6 @@ class Chessboard {
         blackCastleKingRights  = false
     }
 
-    fun reverseBoard(){
-        for (i in 0..7){
-            board[i].reverse()
-        }
-    }
-
     fun getSquare(notation: String): Square {
         val colStr: String = notation.substring(0,1)
         val rowStr: String = notation.substring(1,2)
@@ -98,7 +91,7 @@ class Chessboard {
         return getSquare(notation).piece
     }
 
-    private fun makeMove(move: Move){
+   private fun testMakeMove(move: Move){
 
         val startSquare = move.startSquare
         val endSquare = move.endSquare
@@ -139,78 +132,30 @@ class Chessboard {
         return false
     }
 
-    fun makeMove(square: Square){
-
-
-        for (move in validMoves){
-            if (move.endSquare == square) {
+    fun makeMove(move: Move){
+                val endSquare = move.endSquare
                 // remove en passanted pawn
                 if (move.endSquare.pieceType == PieceType.NONE && move.isCapture){
-                    if (turn == Color.WHITE){
-
-                        board[move.endSquare.col][move.endSquare.row +1].piece = Piece(Color.NONE,PieceType.NONE)
-                    }
-                    else {
-
-                        board[move.endSquare.col][move.endSquare.row -1].piece = Piece(Color.NONE,PieceType.NONE)
-                    }
+                    doEnPassantMove(move)
                 }
-
-
                 //make move
                 if (selectedSquare != null){
-                    square.piece = selectedSquare!!.piece
+                    endSquare.piece = selectedSquare!!.piece
                     selectedSquare!!.piece = Piece(Color.NONE, PieceType.NONE)
-                }
-                else {
-                    break
                 }
 
                 //pawn promotion
-                if (move.piece == PieceType.PAWN) {
+                if (move.pieceType == PieceType.PAWN) {
                     if (move.endSquare.row == 0) {
-                        println("white promotes")
                         promotionSquare.postValue(move.endSquare)
-
                     }
                     else if (move.endSquare.row == 7){
-                        println("blakk promotes")
                         promotionSquare.postValue(move.endSquare)
-
                     }
                 }
 
                 if (move.castling != Castleing.NONE){
-                    when (move.castling)  {
-                        Castleing.BLACK_KING -> {
-                            board[7][0].piece = Piece(Color.NONE,PieceType.NONE)
-                            board[5][0].piece = Piece(Color.BLACK,PieceType.ROOK)
-                            blackCastleKingRights = false
-                            blackCastleQueenRights = false
-                        }
-                        Castleing.BLACK_QUEEN -> {
-                            board[0][0].piece = Piece(Color.NONE,PieceType.NONE)
-                            board[3][0].piece = Piece(Color.BLACK,PieceType.ROOK)
-                            blackCastleKingRights = false
-                            blackCastleQueenRights = false
-
-                        }
-                        Castleing.WHITE_KING -> {
-                            board[7][7].piece = Piece(Color.NONE,PieceType.NONE)
-                            board[5][7].piece = Piece(Color.WHITE,PieceType.ROOK)
-                            whiteCastleKingRights = false
-                            whiteCastleQueenRights = false
-                        }
-                        Castleing.WHITE_QUEEN -> {
-                            board[0][7].piece = Piece(Color.NONE,PieceType.NONE)
-                            board[3][7].piece = Piece(Color.WHITE,PieceType.ROOK)
-                            whiteCastleKingRights = false
-                            whiteCastleQueenRights = false
-
-                        }
-                        else -> {}
-
-                    }
+                    doCastleMove(move)
                 }// castleing
 
                 selectedSquare = null
@@ -219,27 +164,11 @@ class Chessboard {
                 if (move.enPassantSquare != null) {
                     enPassantSquare = move.enPassantSquare
                 }
+                if (move.pieceType == PieceType.KING){
+                    updateKingPosition(move)
+                }
+                updateFiftyMoveCounter(move)
 
-                if (move.piece == PieceType.KING){
-                    if (turn == Color.WHITE){
-                        whiteKingSquare = move.endSquare
-                    }
-                    else if (turn == Color.BLACK) {
-                        blackKingSquare = move.endSquare
-                    }
-                }
-
-                if (move.isCapture || move.piece == PieceType.PAWN){
-                    fiftyMoveCounter = 0
-                }
-                else {
-                    fiftyMoveCounter ++
-                }
-                if (fiftyMoveCounter == 100){
-                    result.postValue(GameResult.DRAW_BY_FIFTY)
-                }
-            } //move == square
-        }
 
         if (turn == Color.WHITE){
             checkForPins(blackKingSquare)
@@ -248,39 +177,19 @@ class Chessboard {
             turn = Color.BLACK
         }
         else {
-
             checkForPins(whiteKingSquare)
             whiteInCheck = isKingInCheck(whiteKingSquare)
             blackInCheck = false
             moveCounter++
             turn = Color.WHITE
         }
-
-        //check for threefold repetition
-
-        //remove move counters
-        val fenString = getFenStringFromPosition().split(" ").take(4).joinToString(" ")
-        positionMap[fenString] = (positionMap[fenString] ?:0) +1
-
-        if (positionMap.containsValue(3)){
-            result.postValue(GameResult.DRAW_BY_REPETITION)
-        }
+        checkThreefoldRepetition()
         //todo update checkmate state
     }
 
-    fun makeMoveFromString(startStr: String, endStr: String){
-        val startSquare = getSquare(startStr)
-        val endSquare = getSquare(endStr)
-        val startCol = startSquare.col
-        val startRow = startSquare.row
-        val piece = board[startCol][startRow].piece
-        val endCol = endSquare.col
-        val endRow = endSquare.row
-
-        board[startCol][startRow].piece = Piece(Color.NONE, PieceType.NONE)
-        placePiece(board[endCol][endRow], piece.color, piece.type)
-    }
-
+    /**
+     * checks piece type and calls appropriate move gen function
+     */
     fun generatePieceMoves(square: Square): MutableList<Move> {
         val potentialMoves = mutableListOf<Move>()
          when (square.pieceType) {
@@ -310,7 +219,7 @@ class Chessboard {
             val testBoard = Chessboard()
             val fen = getFenStringFromPosition()
             testBoard.loadPositionFenString(fen)
-            testBoard.makeMove(move)
+            testBoard.testMakeMove(move)
             if ((turn == Color.WHITE) && !(testBoard.isKingInCheck(testBoard.whiteKingSquare))){
                 nonCheckMoves.add(move)
             }
@@ -323,11 +232,13 @@ class Chessboard {
         return nonCheckMoves
     }
 
-    fun placePiece(square: Square, color: Color, type: PieceType) {
+    private fun placePiece(square: Square, color: Color, type: PieceType) {
         square.piece = Piece(color,type)
     }
 
-
+    /**
+     * Generates valid horizontal or vertical sliding moves moves for rook or queen on square
+     */
     fun generateRookMoves(rookSquare: Square): MutableList<Move> {
         val validMoves = mutableListOf<Move>()
         val row = rookSquare.row
@@ -347,7 +258,7 @@ class Chessboard {
                 val targetSquare = board[col + squaresMoved][row]
                 if (targetSquare.pieceColor== opponentColor){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.ROOK)
+                        isCapture = true, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     break
                 }
@@ -356,7 +267,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.ROOK)
+                        isCapture = false, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -368,7 +279,7 @@ class Chessboard {
                 val targetSquare = board[col - squaresMoved][row]
                 if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.ROOK)
+                        isCapture = true, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     break
                 }
@@ -377,7 +288,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.ROOK)
+                        isCapture = false, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -392,7 +303,7 @@ class Chessboard {
                 val targetSquare = board[col][row + squaresMoved]
                 if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.ROOK)
+                        isCapture = true, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     break
                 }
@@ -401,7 +312,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.ROOK)
+                        isCapture = false, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -412,7 +323,7 @@ class Chessboard {
                 val targetSquare = board[col][row - squaresMoved]
                 if (targetSquare.pieceColor== opponentColor){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.ROOK)
+                        isCapture = true, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     break
                 }
@@ -421,7 +332,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = rookSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.ROOK)
+                        isCapture = false, pieceType = PieceType.ROOK)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -431,6 +342,9 @@ class Chessboard {
         return validMoves
     }
 
+    /**
+     * Checks for pins by searching in each direction from king, and updates pinned flag on each piece
+     */
     fun checkForPins(kingSquare: Square) {
         //todo use actual king piece, track king locations on board
         for (col in board){
@@ -608,6 +522,9 @@ class Chessboard {
         }
     }
 
+    /**
+     * Generates valid moves for knight on square
+     */
     fun generateValidKnightMoves(knightSquare: Square): MutableList<Move> {
         val col = knightSquare.col
         val row = knightSquare.row
@@ -630,9 +547,9 @@ class Chessboard {
                     val targetSquare = board[col + move.first][row + move.second]
                     if (targetSquare.pieceColor != ownColor) {
                         val isCapture = (targetSquare.pieceColor == opponentColor)
-                        val move = Move(startSquare = knightSquare, endSquare = targetSquare,
-                            isCapture = isCapture, piece = PieceType.KNIGHT)
-                        validMoves.add(move)
+                        val newMove = Move(startSquare = knightSquare, endSquare = targetSquare,
+                            isCapture = isCapture, pieceType = PieceType.KNIGHT)
+                        validMoves.add(newMove)
                     }
                 }
             }
@@ -640,6 +557,11 @@ class Chessboard {
         return validMoves
     }
 
+    /**
+     * checks the pinned state of pawn and generates valid moves using helper functions
+     * @see generatePawnPushMoves
+     * @see generatePawnCaptures
+     */
     fun generateValidPawnMoves(pawnSquare: Square): MutableList<Move> {
         val validMoves = mutableListOf<Move>()
         when (pawnSquare.piece.pinned) {
@@ -665,6 +587,9 @@ class Chessboard {
         return validMoves
     }
 
+    /**
+     * Generates push moves for the pawn on square, including en passant moves
+     */
     private fun generatePawnPushMoves(pawnSquare: Square): MutableList<Move> {
         val col = pawnSquare.col
         val row = pawnSquare.row
@@ -674,29 +599,32 @@ class Chessboard {
             && board[col][row-1].pieceType == PieceType.NONE
             && board[col][row-2].pieceType == PieceType.NONE){
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row-2],
-                isCapture = false, piece = PieceType.PAWN, enPassantSquare = board[col][row-1])
+                isCapture = false, pieceType = PieceType.PAWN, enPassantSquare = board[col][row-1])
             validMoves.add(move)
         }
         else if (pawnSquare.row == 1 && ownColor == Color.BLACK
             && board[col][row+1].pieceType == PieceType.NONE
             && board[col][row+2].pieceType == PieceType.NONE) {
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row+2],
-                isCapture = false, piece = PieceType.PAWN, enPassantSquare = board[col][row+1])
+                isCapture = false, pieceType = PieceType.PAWN, enPassantSquare = board[col][row+1])
             validMoves.add(move)
         }
         if (ownColor == Color.WHITE && board[col][row-1].pieceType == PieceType.NONE){
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row-1],
-                isCapture = false, piece = PieceType.PAWN)
+                isCapture = false, pieceType = PieceType.PAWN)
             validMoves.add(move)
         }
         else if (ownColor == Color.BLACK && board[col][row+1].pieceType == PieceType.NONE) {
             val move = Move(startSquare = pawnSquare, endSquare = board[col][row+1],
-                isCapture = false, piece = PieceType.PAWN)
+                isCapture = false, pieceType = PieceType.PAWN)
             validMoves.add(move)
         }
         return  validMoves
     }
 
+    /**
+     * Generates capture moves for the pawn on square, including en passant moves
+     */
     private fun generatePawnCaptures(pawnSquare: Square): MutableList<Move> {
         val col = pawnSquare.col
         val row = pawnSquare.row
@@ -709,12 +637,12 @@ class Chessboard {
             ) {
                 if (col != 7 && board[col+1][row-1].pieceColor == Color.BLACK){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row-1],
-                        isCapture = true, piece = PieceType.PAWN)
+                        isCapture = true, pieceType = PieceType.PAWN)
                     validMoves.add(move)
                 }
                 if (col != 7 && board[col+1][row-1] == enPassantSquare) {
                     val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row-1],
-                        isCapture = true, piece = PieceType.PAWN, enPassantSquare = board[col+1][row-1])
+                        isCapture = true, pieceType = PieceType.PAWN, enPassantSquare = board[col+1][row-1])
                     //board[col+1][row].piece = Piece(Color.NONE,PieceType.NONE)
                     validMoves.add(move)
                 }
@@ -724,12 +652,12 @@ class Chessboard {
             ) {
                 if (col != 0 && board[col-1][row-1].pieceColor == Color.BLACK){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row-1],
-                        isCapture = true, piece = PieceType.PAWN)
+                        isCapture = true, pieceType = PieceType.PAWN)
                     validMoves.add(move)
                 }
                 if (col != 0 && board[col-1][row-1] == enPassantSquare) {
                     val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row-1],
-                        isCapture = true, piece = PieceType.PAWN, enPassantSquare = board[col-1][row-1])
+                        isCapture = true, pieceType = PieceType.PAWN, enPassantSquare = board[col-1][row-1])
                     //board[col-1][row].piece = Piece(Color.NONE,PieceType.NONE)
                     validMoves.add(move)
                 }
@@ -741,12 +669,12 @@ class Chessboard {
             ) {
                 if (col != 0 && board[col-1][row+1].pieceColor == Color.WHITE){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row+1],
-                        isCapture = true, piece = PieceType.PAWN)
+                        isCapture = true, pieceType = PieceType.PAWN)
                     validMoves.add(move)
                 }
                 if (col != 0 && board[col-1][row+1] == enPassantSquare){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col-1][row+1],
-                        isCapture = true, piece = PieceType.PAWN,enPassantSquare = board[col-1][row+1])
+                        isCapture = true, pieceType = PieceType.PAWN,enPassantSquare = board[col-1][row+1])
                     //board[col-1][row].piece = Piece(Color.NONE,PieceType.NONE)
                     validMoves.add(move)
                 }
@@ -756,12 +684,12 @@ class Chessboard {
             ) {
                 if (col != 7 && board[col+1][row+1].pieceColor == Color.WHITE){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row+1],
-                        isCapture = true, piece = PieceType.PAWN)
+                        isCapture = true, pieceType = PieceType.PAWN)
                     validMoves.add(move)
                 }
                 if (col != 7 && board[col+1][row+1] == enPassantSquare){
                     val move = Move(startSquare = pawnSquare, endSquare = board[col+1][row+1],
-                        isCapture = true, piece = PieceType.PAWN, enPassantSquare = board[col+1][row+1])
+                        isCapture = true, pieceType = PieceType.PAWN, enPassantSquare = board[col+1][row+1])
                     //board[col+1][row].piece = Piece(Color.NONE,PieceType.NONE)
                     validMoves.add(move)
                 }
@@ -770,6 +698,10 @@ class Chessboard {
         return validMoves
     }
 
+    /**
+     * Generates valid moves for bishop (or queen) on square
+     *
+     */
     fun generateBishopMoves(bishopSquare: Square): MutableList<Move> {
         val validMoves = mutableListOf<Move>()
         val col = bishopSquare.col
@@ -791,7 +723,7 @@ class Chessboard {
                 val targetSquare = board[col + squaresMoved][row + squaresMoved]
                 if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.BISHOP)
+                        isCapture = true, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
@@ -800,7 +732,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.BISHOP)
+                        isCapture = false, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -811,7 +743,7 @@ class Chessboard {
                 val targetSquare = board[col - squaresMoved][row - squaresMoved]
                 if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.BISHOP)
+                        isCapture = true, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
@@ -820,7 +752,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.BISHOP)
+                        isCapture = false, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -834,7 +766,7 @@ class Chessboard {
                 val targetSquare = board[col - squaresMoved][row + squaresMoved]
                 if (targetSquare.pieceColor == opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.BISHOP)
+                        isCapture = true, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
@@ -843,7 +775,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.BISHOP)
+                        isCapture = false, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -854,7 +786,7 @@ class Chessboard {
                 val targetSquare = board[col + squaresMoved][row - squaresMoved]
                 if (targetSquare.pieceColor== opponentColor){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = true, piece = PieceType.BISHOP)
+                        isCapture = true, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     break
                 }
@@ -863,7 +795,7 @@ class Chessboard {
                 }
                 else if (targetSquare.pieceType == PieceType.NONE){
                     val move = Move(startSquare = bishopSquare, endSquare = targetSquare,
-                        isCapture = false, piece = PieceType.BISHOP)
+                        isCapture = false, pieceType = PieceType.BISHOP)
                     validMoves.add(move)
                     squaresMoved ++
                 }
@@ -872,11 +804,22 @@ class Chessboard {
         return validMoves
     }
 
+    /**
+     * generates all legal moves for queen on given square
+     * @see generateBishopMoves
+     * @see generateRookMoves
+     */
     fun generateQueenMoves(queenSquare: Square): MutableList<Move> {
         return (generateRookMoves(queenSquare) + generateBishopMoves(queenSquare)) as MutableList<Move>
     }
 
+    /**
+     * generates all legal moves for king on given square
+     */
     fun generateKingMoves(kingSquare: Square): MutableList<Move> {
+        if (kingSquare.pieceType != PieceType.KING){
+            Log.wtf("WTF","wrong piece type")
+        }
         val validMoves = mutableListOf<Move>()
         val col = kingSquare.col
         val row = kingSquare.row
@@ -895,11 +838,11 @@ class Chessboard {
                 val targetSquare = board[col + move.first][row + move.second]
                 if (targetSquare.pieceColor != ownColor && !isKingInCheck(targetSquare,ownColor)) {
                     val isCapture = targetSquare.pieceColor == opponentColor
-                    val move = Move(
+                    val newMove = Move(
                         startSquare = kingSquare, endSquare = targetSquare,
-                        isCapture = isCapture, piece = PieceType.KING
+                        isCapture = isCapture, pieceType = PieceType.KING
                     )
-                    validMoves.add(move)
+                    validMoves.add(newMove)
                 }
             }
         }
@@ -914,7 +857,7 @@ class Chessboard {
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("g8"),
-                    isCapture = false, piece = PieceType.KING, notation = "o-o",
+                    isCapture = false, pieceType = PieceType.KING, longNotation = "o-o",
                 castling = Castleing.BLACK_KING)
                 validMoves.add(move)
 
@@ -928,7 +871,7 @@ class Chessboard {
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("c8"),
-                    isCapture = false, piece = PieceType.KING, notation = "o-o-o",
+                    isCapture = false, pieceType = PieceType.KING, longNotation = "o-o-o",
                     castling = Castleing.BLACK_QUEEN)
                 validMoves.add(move)
 
@@ -943,7 +886,7 @@ class Chessboard {
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("g1"),
-                    isCapture = false, piece = PieceType.KING, notation = "O-O",
+                    isCapture = false, pieceType = PieceType.KING, longNotation = "O-O",
                     castling = Castleing.WHITE_KING)
                 validMoves.add(move)
 
@@ -957,7 +900,7 @@ class Chessboard {
 
             ){
                 val move = Move(startSquare = kingSquare, endSquare = getSquare("c1"),
-                    isCapture = false, piece = PieceType.KING, notation = "O-O-O",
+                    isCapture = false, pieceType = PieceType.KING, longNotation = "O-O-O",
                     castling = Castleing.WHITE_QUEEN)
                 validMoves.add(move)
             }
@@ -965,6 +908,11 @@ class Chessboard {
             return validMoves
     }
 
+
+    /**
+     * checks whether the king on given square is in check
+     *
+     */
     fun isKingInCheck(kingSquare: Square,color: Color = Color.NONE): Boolean{
 
         val col = kingSquare.col
@@ -1232,6 +1180,13 @@ class Chessboard {
 
     }
 
+    /**
+     * Loads a position onto the board from given FEN string
+     *
+     * see https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+     *
+     * @param fenString the FEN to load
+     */
     fun loadPositionFenString(fenString: String){
         clearBoard()
         val typeHashMap = hashMapOf(
@@ -1312,6 +1267,11 @@ class Chessboard {
         }
     }
 
+    /**
+     * Generates the FEN string for the current position on board
+     *
+     * see https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+     */
     fun getFenStringFromPosition(): String {
         val typeHashMap = hashMapOf(
             PieceType.KING to "k",
@@ -1373,22 +1333,125 @@ class Chessboard {
             castlingString += "q"
         }
 
-        if (castlingString != ""){
-            fenString += castlingString
+        fenString += if (castlingString != ""){
+            castlingString
+        } else {
+            "-"
+        }
+        val colMap = hashMapOf(
+            0 to "a",
+            1 to "b",
+            2 to "c",
+            3 to "d",
+            4 to "e",
+            5 to "f",
+            6 to "g",
+            7 to "h",
+        )
+        var enPassantString = " "
+        if (enPassantSquare != null) {
+
+            enPassantString += colMap[enPassantSquare!!.col]
+            enPassantString += 7 - (enPassantSquare!!.row) + 1
+            enPassantString += " "
+        }
+        fenString += if (enPassantString == " ") {
+            " - "
         }
         else {
-            fenString += "-"
+            enPassantString
         }
-        fenString +=" - "  //en passant, todo
         fenString += fiftyMoveCounter.toString()
         fenString +=" "
         fenString += moveCounter.toString()
 
-
-        //todo en passant
         return fenString
 
     }
 
+    /**
+     * moves king and rook to correct squares for castling
+     */
+    private fun doCastleMove(move: Move){
+        when (move.castling)  {
+            Castleing.BLACK_KING -> {
+                board[7][0].piece = Piece(Color.NONE,PieceType.NONE)
+                board[5][0].piece = Piece(Color.BLACK,PieceType.ROOK)
+                blackCastleKingRights = false
+                blackCastleQueenRights = false
+            }
+            Castleing.BLACK_QUEEN -> {
+                board[0][0].piece = Piece(Color.NONE,PieceType.NONE)
+                board[3][0].piece = Piece(Color.BLACK,PieceType.ROOK)
+                blackCastleKingRights = false
+                blackCastleQueenRights = false
+
+            }
+            Castleing.WHITE_KING -> {
+                board[7][7].piece = Piece(Color.NONE,PieceType.NONE)
+                board[5][7].piece = Piece(Color.WHITE,PieceType.ROOK)
+                whiteCastleKingRights = false
+                whiteCastleQueenRights = false
+            }
+            Castleing.WHITE_QUEEN -> {
+                board[0][7].piece = Piece(Color.NONE,PieceType.NONE)
+                board[3][7].piece = Piece(Color.WHITE,PieceType.ROOK)
+                whiteCastleKingRights = false
+                whiteCastleQueenRights = false
+
+            }
+            else -> {}
+        }
+    }
+
+    /**
+     * Removed the captured pawn in an en passant move
+     */
+    private fun doEnPassantMove(move: Move){
+        if (turn == Color.WHITE){
+
+            board[move.endSquare.col][move.endSquare.row +1].piece = Piece(Color.NONE,PieceType.NONE)
+        }
+        else {
+
+            board[move.endSquare.col][move.endSquare.row -1].piece = Piece(Color.NONE,PieceType.NONE)
+        }
+    }
+
+    /**
+     * Increments or resets the fifty move counter and sets a draw if 50 moves ( 100 half moves) is reached
+     */
+    private fun updateFiftyMoveCounter(move: Move){
+        if (move.isCapture || move.pieceType == PieceType.PAWN){
+            fiftyMoveCounter = 0
+        }
+        else {
+            fiftyMoveCounter ++
+        }
+        if (fiftyMoveCounter == 100){
+            result.postValue(GameResult.DRAW_BY_FIFTY)
+        }
+    }
+
+    /**
+     * increments hashmap for current position and sets draw if three move repetition has happened
+     */
+    private fun checkThreefoldRepetition(){
+        val fenString = getFenStringFromPosition().split(" ").take(4).joinToString(" ")
+        positionMap[fenString] = (positionMap[fenString] ?:0) +1
+
+        if (positionMap.containsValue(3)){
+            result.postValue(GameResult.DRAW_BY_REPETITION)
+        }
+    }
+
+    private fun updateKingPosition(move: Move){
+        if (turn == Color.WHITE){
+            whiteKingSquare = move.endSquare
+        }
+        else if (turn == Color.BLACK) {
+            blackKingSquare = move.endSquare
+        }
+    }
 }
 

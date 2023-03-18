@@ -9,24 +9,28 @@
         android:src="@drawable/w_knight"
         android:layout_weight="1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/knight" />
     <ImageView
         android:id="@+id/promotion_bishop"
         android:src="@drawable/w_bishop"
         android:layout_weight="1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/bishop" />
     <ImageView
         android:id="@+id/promotion_rook"
         android:src="@drawable/w_rook"
         android:layout_weight="1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/rook" />
     <ImageView
         android:id="@+id/promotion_queen"
         android:src="@drawable/w_queen"
         android:layout_weight="1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/queen" />
 
 </LinearLayout>

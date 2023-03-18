@@ -9,14 +9,8 @@ class Chessgame(color: Color= Color.WHITE) {
     val playerColor = color
     val toMove = Color.WHITE
     val moveHistory: Stack<Move> = Stack<Move>()
-    //todo add moves to stack
     var selectedSquare : Square? = null
     var validMoves = mutableListOf<Move>()
-
-    var whiteCastleQueenRights = true
-    var whiteCastleKingRights  = true
-    var blackCastleQueenRights = true
-    var blackCastleKingRights  = true
 
 
     init {
@@ -26,8 +20,16 @@ class Chessgame(color: Color= Color.WHITE) {
         chessboard.loadPositionFenString(fenString)
     }
 
+    /**
+     * sends the move to the chessboard and adds move to the move stack to facilitate undo move
+     *
+     */
     fun makeMove(square: Square){
-        chessboard.makeMove(square)
-        //TODO generate notation and add to stack
+        for (move in chessboard.validMoves) {
+            if (move.endSquare == square) {
+                chessboard.makeMove(move)
+                moveHistory.push(move)
+            }
+        }
     }
 }

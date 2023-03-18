@@ -1,5 +1,6 @@
 package com.pinguapps.chesstrainer.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -52,16 +53,27 @@ class ChessView : View {
 
     }
 
+    /**
+     *  starts observing values
+     *  @see observeGameResult
+     *  @see observePawnPromotion
+     *  ViewTreeLifecycleOwner() has been set at this point which is required
+     *  for observables in custom view
+     */
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         observePawnPromotion()
         observeGameResult()
-
     }
 
-
+    /**
+     *  forces the view to be a square
+     *  on landscape will fill height
+     *  on portrait will fill width
+     */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, widthMeasureSpec )
+        val squareMeasureSpec = widthMeasureSpec.coerceAtMost(heightMeasureSpec)
+        super.onMeasure(squareMeasureSpec, squareMeasureSpec)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -73,9 +85,12 @@ class ChessView : View {
 
     }
 
+    /**
+     * Draws the board board. If player is black, perspective is inverted
+     */
     private fun drawBoard(canvas: Canvas) {
+        val tileSize = width.coerceAtMost(height) / 8
         if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
-            val tileSize = width.coerceAtMost(height) / 8
             for (col in 0..7) for (row in 0..7) {
                 val paint: Paint =
                     if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
@@ -89,7 +104,6 @@ class ChessView : View {
             }
         }
         else {
-            val tileSize = width.coerceAtMost(height) / 8
             for (col in 0..7) for (row in 0..7) {
                 val paint: Paint =
                     if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
@@ -104,6 +118,9 @@ class ChessView : View {
         }
     }
 
+    /**
+     * Draws all pieces on board. If player is black, perspective is inverted
+     */
     private fun drawPieces(canvas: Canvas) {
         if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             for (col in 0..7) for (row in 0..7) {
@@ -120,6 +137,11 @@ class ChessView : View {
         }
     }
 
+    /**
+     * checks square and chooses the correct drawable to draw for current piece
+     *
+     * @param square the square on the board to check for piece type
+     */
     private fun drawPiece(canvas: Canvas, square: Square) {
         if (square.pieceColor == com.pinguapps.chesstrainer.data.Color.WHITE) {
             when (square.pieceType) {
@@ -145,6 +167,9 @@ class ChessView : View {
         }
     }
 
+    /**
+     * Highlights a king which is in check
+     */
     private fun drawCheckHighlight(canvas: Canvas){
 
         if (board.whiteInCheck){
@@ -158,13 +183,15 @@ class ChessView : View {
         }
     }
 
-    private fun drawSelectedPiece(canvas: Canvas){
-        if (board.selectedSquare != null){
-            val tileSize = height.coerceAtMost(width) / 8
 
+    /**
+     * Highlights the square which contains currently selected piece
+     */
+    private fun drawSelectedPiece(canvas: Canvas){
+        if (board.selectedSquare != null) {
+            val tileSize = height.coerceAtMost(width) / 8
             val col: Int
             val row: Int
-
             if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
                 col = board.selectedSquare!!.col
                 row = board.selectedSquare!!.row
@@ -173,7 +200,6 @@ class ChessView : View {
                 col = abs(board.selectedSquare!!.col - 7)
                 row = abs(board.selectedSquare!!.row - 7)
             }
-
 
             //todo load from themes
             HIGHLIGHT_PAINT.color = Color.rgb(253, 33, 21)
@@ -188,6 +214,9 @@ class ChessView : View {
 
     }
 
+    /**
+     * draws an image on a chosen square
+     */
     private fun drawPicture(canvas: Canvas, square: Square, picture: Int) {
         if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             val tileSize = height.coerceAtMost(width) / 8
@@ -216,89 +245,94 @@ class ChessView : View {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        val tileSize = height.coerceAtMost(width) / 8
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
+                //todo animate pieces
             }
             MotionEvent.ACTION_UP -> {
                 val x: Float = event.x
                 val y: Float = event.y
-                val col: Int
-                val row: Int
-
-                if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
-                    col = floor(x.div(tileSize)).toInt()
-                    row = floor(y.div(tileSize)).toInt()
-                }
-                else {
-                    col = abs(floor(x.div(tileSize)).toInt()-7)
-                    row = abs(floor(y.div(tileSize)).toInt()-7)
-                }
+                val (col, row) = getSquareFromCoordinates(x,y)
 
                 if (row in 0..7 && col in 0..7) {
-
-                    val clickedSquare = board.board[col][row]
-                    val highlightedSquare = board.selectedSquare
-                    if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
-                        board.makeMove(clickedSquare)
-                        invalidate()
-                    } else {
-                        if (clickedSquare.pieceType != PieceType.NONE && board.turn == clickedSquare.pieceColor) {
-                            //todo add check for player color
-                            board.validMoves = board.generatePieceMoves(clickedSquare)
-                            board.selectedSquare = clickedSquare
-                            invalidate()
-                        } else {
-                            board.selectedSquare = null
-                            board.validMoves = mutableListOf()
-                        }
-                    }
+                    handleBoardClick(col,row)
                 }
             }
             MotionEvent.ACTION_DOWN -> {
-
                 val x: Float = event.x
                 val y: Float = event.y
-
-                val col: Int
-                val row: Int
-
-                if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
-                    col = floor(x.div(tileSize)).toInt()
-                    row = floor(y.div(tileSize)).toInt()
-                }
-                else {
-                    col = abs(floor(x.div(tileSize)).toInt()-7)
-                    row = abs(floor(y.div(tileSize)).toInt()-7)
-                }
-
+                val (col, row) = getSquareFromCoordinates(x,y)
 
                 if (row in 0..7 && col in 0..7) {
-                    val highlightedSquare = board.selectedSquare
-                    val clickedSquare = board.board[col][row]
-
-                    if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
-                        board.makeMove(clickedSquare)
-                        invalidate()
-                    } else {
-                        if (clickedSquare.pieceType != PieceType.NONE && board.turn == clickedSquare.pieceColor) {
-                            //todo add check for player color
-                            board.validMoves = board.generatePieceMoves(clickedSquare)
-                            board.selectedSquare = clickedSquare
-                            invalidate()
-                        } else {
-                            board.selectedSquare = null
-                            board.validMoves = mutableListOf()
-                        }
-                    }
-
+                    handleBoardClick(col,row)
                 }
             }
-            }
+        }
         return true
     }
 
-    fun drawValidMoves(canvas: Canvas) {
+    override fun performClick(): Boolean {
+        performClick()
+        return super.performClick()
+    }
+
+
+    /** Takes coordinates and returns corresponding square in board
+     *
+     * @param x x coordinate in view
+     * @param y y coordinate in view
+     *
+     * @return column and row on chessboard that was clicked
+     */
+    private fun getSquareFromCoordinates(x: Float, y: Float): Pair<Int,Int>{
+        val tileSize = height.coerceAtMost(width) / 8
+        val col: Int
+        val row: Int
+        if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
+            col = floor(x.div(tileSize)).toInt()
+            row = floor(y.div(tileSize)).toInt()
+        }
+        else {
+            col = abs(floor(x.div(tileSize)).toInt()-7)
+            row = abs(floor(y.div(tileSize)).toInt()-7)
+        }
+        return Pair(col,row)
+    }
+
+    /** Takes the appropriate action depending on whether a piece is selected
+     * if piece is selected and clicked square is valid move, make move. If clicked on
+     * own piece, select piece. If piece selected and clicked square is not valid, deselect piece
+     *
+     * @param col column of clicked square
+     * @param row row of clicked square
+     *
+     */
+    private fun handleBoardClick(col: Int, row: Int){
+        val highlightedSquare = board.selectedSquare
+        val clickedSquare = board.board[col][row]
+        if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
+            game.makeMove(clickedSquare)
+            invalidate()
+        } else {
+            if (clickedSquare.pieceType != PieceType.NONE && board.turn == clickedSquare.pieceColor) {
+                //todo add check for player color
+                board.validMoves = board.generatePieceMoves(clickedSquare)
+                board.selectedSquare = clickedSquare
+                invalidate()
+            } else {
+                board.selectedSquare = null
+                board.validMoves = mutableListOf()
+            }
+        }
+    }
+
+
+    /** Draws a circle on every square that the currently selected piece can move to
+     *
+     * @param canvas the view's canvas
+     *
+     */
+    private fun drawValidMoves(canvas: Canvas) {
         if (board.validMoves.size > 0) {
             val square = board.selectedSquare
             if (square != null &&square.pieceType != PieceType.NONE) {
@@ -329,10 +363,17 @@ class ChessView : View {
                 }
                 invalidate()
             }
-
         }
     }
 
+
+    /**
+     *  handles the promotion of pawns
+     *  observes the promotion square value of current board and lets user choose piece
+     *  to promote to
+     *
+     */
+    @SuppressLint("ClickableViewAccessibility")
     private fun observePawnPromotion(){
         findViewTreeLifecycleOwner()?.let {lifeCycleOwner ->
             board.promotionSquare.observe(lifeCycleOwner) {square ->
@@ -342,8 +383,14 @@ class ChessView : View {
 
 
                 if (square.pieceColor == com.pinguapps.chesstrainer.data.Color.WHITE) {
-                    val popupWhite = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, true)
+                    val popupWhite = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, false)
+
+                    popupBind.root.setOnTouchListener { _, _ ->
+                        true
+                    }
                     popupWhite.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
+
+
                     popupBind.promotionKnight.setOnClickListener {
                         board.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.WHITE)
                         invalidate()
@@ -371,7 +418,7 @@ class ChessView : View {
                     popupBind.promotionRook.setImageResource(R.drawable.b_rook)
                     popupBind.promotionQueen.setImageResource(R.drawable.b_queen)
 
-                    val popupBlack = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, true)
+                    val popupBlack = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, false)
                     popupBlack.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
 
                     popupBind.promotionKnight.setOnClickListener {
@@ -400,12 +447,15 @@ class ChessView : View {
         }
     }
 
+    /**
+     * observes game result and makes game result popup depending on result
+     */
     private fun observeGameResult() {
         findViewTreeLifecycleOwner()?.let { lifeCycleOwner ->
             board.result.observe(lifeCycleOwner) { gameResult ->
                 val popupInflater = context.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
                 val popupBind = PopupGameOverBinding.inflate(popupInflater as LayoutInflater)
-                val popupGG = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, true)
+                val popupGG = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, false)
                 when (gameResult) {
 
                     GameResult.GAME_IN_PROGRESS -> {}
@@ -486,24 +536,6 @@ class ChessView : View {
             }
 
         }
-    }
-
-    fun onDrag(view: View, dragEvent: DragEvent): Boolean {
-        val dragAction = dragEvent.action;
-        val dragView = dragEvent.localState;
-        val containsDragable: Boolean = when (dragAction) {
-            DragEvent.ACTION_DRAG_EXITED -> {
-                false
-            }
-            DragEvent.ACTION_DRAG_ENTERED -> {
-                true
-            }
-            else -> {true}
-        }
-        if (dragAction == DragEvent.ACTION_DROP && containsDragable){
-            //your function to move and check valid moves
-        }
-        return true;
     }
 
     companion object {

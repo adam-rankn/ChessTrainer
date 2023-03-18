@@ -16,6 +16,10 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="penguin_chess">Penguin Chess</string>
+    <string name="knight">Knight</string>
+    <string name="bishop">Bishop</string>
+    <string name="rook">Rook</string>
+    <string name="queen">Queen</string>
 
 
 </resources>
