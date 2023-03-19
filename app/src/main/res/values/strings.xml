@@ -13,13 +13,18 @@
     <string name="result_checkmate">by checkmate</string>
     <string name="result_resignation">by resignation</string>
     <string name="result_agreement">by agreement</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
     <string name="penguin_chess">Penguin Chess</string>
     <string name="knight">Knight</string>
     <string name="bishop">Bishop</string>
     <string name="rook">Rook</string>
     <string name="queen">Queen</string>
+    <string name="forward">Forward</string>
+    <string name="undo_move">Undo Move</string>
+    <string name="redo_move">Redo Move</string>
+    <string name="go_to_start">Go to start</string>
+    <string name="go_to_current_move">Go to current move</string>
+    <string name="hint">Hint</string>
 
 
 </resources>

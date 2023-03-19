@@ -86,8 +86,6 @@ class TestChessboard {
 
         assertEquals(PieceType.KING,board.getSquare("b4").pieceType)
         assertEquals(PieceType.KING,board.getSquare("d7").pieceType)
-        assertEquals(15, board.moveCounter)
-        assertEquals(5, board.fiftyMoveCounter)
         assertNotNull(board.enPassantSquare)
         assertEquals(4,board.enPassantSquare!!.col)
         assertEquals(5,board.enPassantSquare!!.row)
@@ -137,13 +135,14 @@ class TestChessboard {
 
         //run for black and white kings
         board.checkForPins(board.whiteKingSquare)
-        board.checkForPins(board.blackKingSquare)
 
         //testing all directions
-        assertEquals(PinnedState.VERTICAL,board.getPieceOnSquare("e7").pinned)
         assertEquals(PinnedState.VERTICAL,board.getPieceOnSquare("e4").pinned)
         assertEquals(PinnedState.HORIZONTAL,board.getPieceOnSquare("f1").pinned)
         assertEquals(PinnedState.DIAGONALA8H1,board.getPieceOnSquare("c3").pinned)
+
+        board.checkForPins(board.blackKingSquare)
+        assertEquals(PinnedState.VERTICAL,board.getPieceOnSquare("e7").pinned)
         assertEquals(PinnedState.DIAGONALA8H1,board.getPieceOnSquare("f7").pinned)
         assertEquals(PinnedState.DIAGONALA1H8,board.getPieceOnSquare("d7").pinned)
 
@@ -192,6 +191,7 @@ class TestChessboard {
         val g4moves = board.generateValidPawnMoves(board.getSquare("g4"))
         assertEquals(1,g4moves.size)
 
+        board.checkForPins(board.blackKingSquare)
         val b7moves = board.generateValidPawnMoves(board.getSquare("b7"))
         assertEquals(1,b7moves.size)
 
@@ -204,9 +204,11 @@ class TestChessboard {
         val f2moves = board.generateValidPawnMoves(board.getSquare("f2"))
         assertEquals(1,f2moves.size)
 
+        board.checkForPins(board.blackKingSquare)
         val b6moves = board.generateValidPawnMoves(board.getSquare("b6"))
         assertEquals(1,b6moves.size)
 
+        board.checkForPins(board.whiteKingSquare)
         val e5moves = board.generateValidPawnMoves(board.getSquare("e5"))
         assertEquals(1,e5moves.size)
 
@@ -250,6 +252,7 @@ class TestChessboard {
         val d3moves = board.generateBishopMoves(board.getSquare("d3"))
         assertEquals(3, d3moves.size)
 
+        board.checkForPins(board.blackKingSquare)
         //horizontal pin
         val c8moves = board.generatePieceMoves(board.getSquare("c8"))
         assertEquals(0, c8moves.size)
@@ -273,6 +276,7 @@ class TestChessboard {
         val board = Chessboard()
         board.loadPositionFenString("4k3/2b1q1q1/8/N7/3n4/2Q5/4R3/r7 w - - 0 1")
 
+        board.checkForPins(board.blackKingSquare)
         val e7moves = board.generateQueenMoves(board.getSquare("e7"))
         assertEquals(5, e7moves.size)
 
@@ -370,14 +374,14 @@ class TestChessboard {
         board.loadPositionFenString("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1")
         board.validMoves = board.generateKingMoves(board.whiteKingSquare)
         board.selectedSquare = board.getSquare("e1")
-       // board.makeMove(board.getSquare("g1"))
+       board.makeMove(board.getSquare("g1"))
         assertEquals(PieceType.ROOK, board.getSquare("f1").pieceType)
         assertEquals(PieceType.NONE, board.getSquare("h1").pieceType)
         assertEquals(PieceType.KING, board.getSquare("g1").pieceType)
 
         board.validMoves = board.generateKingMoves(board.blackKingSquare)
         board.selectedSquare = board.getSquare("e8")
-        //board.makeMove(board.getSquare("g8"))
+        board.makeMove(board.getSquare("g8"))
         assertEquals(PieceType.ROOK, board.getSquare("f8").pieceType)
         assertEquals(PieceType.NONE, board.getSquare("h8").pieceType)
         assertEquals(PieceType.KING, board.getSquare("g8").pieceType)
@@ -385,14 +389,14 @@ class TestChessboard {
         board.loadPositionFenString("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1")
         board.validMoves = board.generateKingMoves(board.whiteKingSquare)
         board.selectedSquare = board.getSquare("e1")
-        //board.makeMove(board.getSquare("c1"))
+        board.makeMove(board.getSquare("c1"))
         assertEquals(PieceType.ROOK, board.getSquare("d1").pieceType)
         assertEquals(PieceType.NONE, board.getSquare("a1").pieceType)
         assertEquals(PieceType.KING, board.getSquare("c1").pieceType)
 
         board.validMoves = board.generateKingMoves(board.blackKingSquare)
         board.selectedSquare = board.getSquare("e8")
-        // todo board.makeMove(board.getSquare("c8"))
+        board.makeMove(board.getSquare("c8"))
         assertEquals(PieceType.ROOK, board.getSquare("d8").pieceType)
         assertEquals(PieceType.NONE, board.getSquare("a8").pieceType)
         assertEquals(PieceType.KING, board.getSquare("c8").pieceType)
@@ -401,27 +405,27 @@ class TestChessboard {
     @Test
     fun testGenerateFenString(){
         val board = Chessboard()
-        val initialFenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-        assertEquals(initialFenString,board.getFenStringFromPosition())
+        val initialFenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - "
+        assertEquals(initialFenString,board.getPartialFenStringFromPosition())
 
-        val anotherFenString = "r3k1nr/pp2pppp/1p1p4/6b1/6B1/3P1NB1/PPP1PPPP/RN1QK2R w KQkq - 0 1"
+        val anotherFenString = "r3k1nr/pp2pppp/1p1p4/6b1/6B1/3P1NB1/PPP1PPPP/RN1QK2R w KQkq - "
 
         board.loadPositionFenString(anotherFenString)
-        assertEquals(anotherFenString,board.getFenStringFromPosition())
+        assertEquals(anotherFenString,board.getPartialFenStringFromPosition())
 
-        val fenString2Kings = "8/8/8/4k3/8/4K3/8/8 w - - 17 34"
+        val fenString2Kings = "8/8/8/4k3/8/4K3/8/8 w - - "
         board.loadPositionFenString(fenString2Kings)
-        assertEquals(fenString2Kings,board.getFenStringFromPosition())
+        assertEquals(fenString2Kings,board.getPartialFenStringFromPosition())
 
         // test en passant square in string
-        val enPassantFenString = "rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 1"
+        val enPassantFenString = "rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 "
         board.loadPositionFenString(enPassantFenString)
-        assertEquals(enPassantFenString,board.getFenStringFromPosition())
+        assertEquals(enPassantFenString,board.getPartialFenStringFromPosition())
 
         // no en passant capture possible
-        val noEnPassantFenString = "rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1"
+        val noEnPassantFenString = "rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq - "
         board.loadPositionFenString(noEnPassantFenString)
-        assertEquals(noEnPassantFenString,board.getFenStringFromPosition())
+        assertEquals(noEnPassantFenString,board.getPartialFenStringFromPosition())
     }
 
     @Test
@@ -441,8 +445,7 @@ class TestChessboard {
         board.enPassantSquare = board.getSquare("e6")
         val moves = board.generatePieceMoves(board.getSquare("d5"))
         board.validMoves = moves
-        //todo
-        //board.makeMove(board.getSquare("e6"))
+        board.makeMove(board.getSquare("e6"))
         assertEquals(PieceType.NONE,board.getSquare("e5").pieceType)
     }
 

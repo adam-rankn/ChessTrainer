@@ -6,19 +6,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.pinguapps.chesstrainer.databinding.FragmentChessboardBinding
-import com.pinguapps.chesstrainer.logic.PassedPawnPuzzle
+import com.pinguapps.chesstrainer.databinding.FragmentBotChessBinding
 import androidx.lifecycle.ViewTreeLifecycleOwner
 
-class ChessboardFragment: Fragment() {
+class BotChessFragment: Fragment() {
 
 
-    private var _binding: FragmentChessboardBinding? = null
+    private var _binding: FragmentBotChessBinding? = null
     private val binding get() = _binding!!
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
     }
 
     override fun onCreateView(
@@ -26,20 +26,38 @@ class ChessboardFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentChessboardBinding.inflate(inflater, container, false)
+        _binding = FragmentBotChessBinding.inflate(inflater, container, false)
         val view = binding.root
         val chessViewModel: ChessboardViewModel by activityViewModels()
 
         val boardView = binding.chessboard
         ViewTreeLifecycleOwner.set(boardView, this)
 
+        boardView.game = chessViewModel.chessgame
+        boardView.board = chessViewModel.chessgame.chessboard
 
-        val puzzleGen = PassedPawnPuzzle()
-        puzzleGen.generateBasicPuzzle()
-        boardView.game.chessboard = puzzleGen.chessboard
-        boardView.board = puzzleGen.chessboard
-        boardView.invalidate()
-        //boardView.game = chessViewModel.chessgame
+
+        binding.btnUndo.setOnClickListener {
+            chessViewModel.undoMove()
+            boardView.invalidate()
+        }
+        binding.btnRedo.setOnClickListener {
+            chessViewModel.redoMove()
+            boardView.invalidate()
+        }
+
+        binding.btnGoToStart.setOnClickListener {
+            chessViewModel.undoAllMoves()
+            boardView.invalidate()
+        }
+
+        binding.btnGoCurrent.setOnClickListener {
+            chessViewModel.redoAllMoves()
+            boardView.invalidate()
+
+        }
+
+
 
 
         return view

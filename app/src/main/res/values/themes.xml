@@ -11,6 +11,10 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+
+        <!-- Chessboard colors. -->
+        <item name="colorHighlightPiece">@color/red</item>
+        <item name="boardDarkSquare">@color/dark_green</item>
+        <item name="boardLightSquare">@color/light_tan</item>
     </style>
 </resources>

@@ -14,6 +14,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.PopupWindow
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import com.google.android.material.color.MaterialColors
 import com.pinguapps.chesstrainer.R
 import com.pinguapps.chesstrainer.data.Chessgame
 import com.pinguapps.chesstrainer.data.GameResult
@@ -23,6 +24,7 @@ import com.pinguapps.chesstrainer.databinding.PopupGameOverBinding
 import com.pinguapps.chesstrainer.databinding.PopupPawnPromotionBinding
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.min
 
 
 class ChessView : View {
@@ -47,10 +49,10 @@ class ChessView : View {
     }
 
     fun init() {
-        WHITE_PAINT.color = Color.rgb(207, 151, 85)
-        BLACK_PAINT.color = Color.rgb(66, 33, 21)
-        //todo load actual colors themes etc
-
+        val colorBlack = MaterialColors.getColor(this, R.attr.boardDarkSquare)
+        val colorWhite = MaterialColors.getColor(this, R.attr.boardLightSquare)
+        WHITE_PAINT.color = colorBlack
+        BLACK_PAINT.color = colorWhite
     }
 
     /**
@@ -72,8 +74,15 @@ class ChessView : View {
      *  on portrait will fill width
      */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val squareMeasureSpec = widthMeasureSpec.coerceAtMost(heightMeasureSpec)
-        super.onMeasure(squareMeasureSpec, squareMeasureSpec)
+
+        val widthPixels = MeasureSpec.getSize(widthMeasureSpec)
+        val heightPixels = MeasureSpec.getSize(heightMeasureSpec)
+        if (widthPixels > heightPixels){
+            super.onMeasure(heightMeasureSpec, heightMeasureSpec)
+        }
+        else {
+            super.onMeasure(widthMeasureSpec, widthMeasureSpec)
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -201,9 +210,9 @@ class ChessView : View {
                 row = abs(board.selectedSquare!!.row - 7)
             }
 
-            //todo load from themes
-            HIGHLIGHT_PAINT.color = Color.rgb(253, 33, 21)
-            val paint: Paint = HIGHLIGHT_PAINT
+            val colorHighlight = MaterialColors.getColor(this, R.attr.colorHighlightPiece)
+            HIGHLIGHT_PAINT.color = colorHighlight
+            val paint: Paint = HIGHLIGHT_PAINT 
             canvas.drawRect(
                 (col * tileSize).toFloat(),
                 (row * tileSize).toFloat(),

@@ -2,7 +2,7 @@ package com.pinguapps.chesstrainer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.pinguapps.chesstrainer.ui.ChessboardFragment
+import com.pinguapps.chesstrainer.ui.BotChessFragment
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -11,7 +11,7 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager
             .beginTransaction()
-            .add(R.id.container, ChessboardFragment())
+            .add(R.id.container, BotChessFragment())
             .commit()
     }
 }

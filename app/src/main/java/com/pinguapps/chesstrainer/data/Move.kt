@@ -13,7 +13,7 @@ class Move(
     val endSquare: Square,
     val startSquare: Square,
     val pieceType: PieceType,
-    val isCapture: Boolean = false,
+    val capturedPiece: PieceType,
     var shortNotation: String = "",
     val longNotation: String = "",
     val castling: Castleing = Castleing.NONE,
