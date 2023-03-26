@@ -25,6 +25,14 @@
     <string name="go_to_start">Go to start</string>
     <string name="go_to_current_move">Go to current move</string>
     <string name="hint">Hint</string>
+    <string name="try_again">Try Again</string>
+    <string name="rematch">Rematch</string>
+    <string name="menu">Menu</string>
+
+    <string name="puzzle_passed">Puzzle Passed</string>
+    <string name="puzzle_failed">Puzzle Failed</string>
+    <string name="wrong_move">Wrong Move Played</string>
+    <string name="new_puzzle">New Puzzle</string>
 
 
 </resources>

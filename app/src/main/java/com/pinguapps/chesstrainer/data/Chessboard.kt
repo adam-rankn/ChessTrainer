@@ -8,7 +8,6 @@ import kotlin.math.min
 
 class Chessboard {
 
-    //todo move some stuff to chessgame
     val board = Array(8) { row ->
         Array(8) { col ->
             Square(col, row)
@@ -26,21 +25,14 @@ class Chessboard {
     var blackCastleQueenRights = true
     var blackCastleKingRights  = true
     var enPassantSquare: Square? = null
-    val result = MutableLiveData(GameResult.GAME_IN_PROGRESS)
     var whiteKingSquare = getSquare("e1")
     var blackKingSquare = getSquare("e8")
     var whiteInCheck = false
     var blackInCheck = false
-    private val positionMap = mutableMapOf<String,Int>()
     var promotionSquare = MutableLiveData<Square>()
 
     init {
         loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-        whiteCastleQueenRights = true
-        whiteCastleKingRights  = true
-        blackCastleQueenRights = true
-        blackCastleKingRights  = true
-
     }
 
     fun clearBoard() {
@@ -49,13 +41,18 @@ class Chessboard {
                 square.piece = Piece(Color.NONE,PieceType.NONE)
             }
         }
-
-
-
         whiteCastleQueenRights = false
         whiteCastleKingRights  = false
         blackCastleQueenRights = false
         blackCastleKingRights  = false
+        enPassantSquare = null
+        whiteInCheck = false
+        blackInCheck = false
+        promotionSquare = MutableLiveData<Square>()
+        whiteKingSquare = getSquare("e1")
+        blackKingSquare = getSquare("e8")
+        turn = Color.WHITE
+        validMoves = mutableListOf()
     }
 
     fun getSquare(notation: String): Square {
@@ -78,6 +75,8 @@ class Chessboard {
 
         return (board[col][row])
     }
+
+
 
     fun getSquare(col: Int, row: Int): Square {
         return board[col][row]
@@ -116,7 +115,6 @@ class Chessboard {
                 blackKingSquare = board[endCol][endRow]
             }
         }
-
     }
 
     fun isMoveValid(square: Square): Boolean {
@@ -129,40 +127,41 @@ class Chessboard {
     }
 
     fun makeMove(move: Move){
-                val endSquare = move.endSquare
-                // remove en passanted pawn
-                if (move.endSquare.pieceType == PieceType.NONE && move.capturedPiece != PieceType.NONE){
-                    doEnPassantMove(move)
-                }
-                //make move
-                if (selectedSquare != null){
-                    endSquare.piece = selectedSquare!!.piece
-                    selectedSquare!!.piece = Piece(Color.NONE, PieceType.NONE)
-                }
+        val startSquare = move.startSquare
+        val endSquare = move.endSquare
+        // remove en passanted pawn
+        if (move.endSquare.pieceType == PieceType.NONE && move.capturedPiece != PieceType.NONE){
+            doEnPassantMove(move)
+        }
+        //make move
 
-                //pawn promotion
-                if (move.pieceType == PieceType.PAWN) {
-                    if (move.endSquare.row == 0) {
-                        promotionSquare.postValue(move.endSquare)
-                    }
-                    else if (move.endSquare.row == 7){
-                        promotionSquare.postValue(move.endSquare)
-                    }
-                }
+        endSquare.piece = startSquare.piece
+        startSquare.piece = Piece(Color.NONE, PieceType.NONE)
 
-                if (move.castling != Castleing.NONE){
-                    doCastleMove(move)
-                }// castleing
 
-                selectedSquare = null
-                validMoves = mutableListOf()
-                enPassantSquare = null
-                if (move.enPassantSquare != null) {
-                    enPassantSquare = move.enPassantSquare
-                }
-                if (move.pieceType == PieceType.KING){
-                    updateKingPosition(move)
-                }
+        //pawn promotion
+        if (move.pieceType == PieceType.PAWN) {
+            if (move.endSquare.row == 0) {
+                promotionSquare.postValue(move.endSquare)
+            }
+            else if (move.endSquare.row == 7){
+                promotionSquare.postValue(move.endSquare)
+            }
+        }
+
+        if (move.castling != Castleing.NONE){
+            doCastleMove(move)
+        }// castleing
+
+        selectedSquare = null
+        validMoves = mutableListOf()
+        enPassantSquare = null
+        if (move.enPassantSquare != null) {
+            enPassantSquare = move.enPassantSquare
+        }
+        if (move.pieceType == PieceType.KING){
+            updateKingPosition(move)
+        }
 
         if (turn == Color.WHITE){
             checkForPins(blackKingSquare)
@@ -176,7 +175,6 @@ class Chessboard {
             blackInCheck = false
             turn = Color.WHITE
         }
-        checkThreefoldRepetition()
         //todo update checkmate state
     }
 
@@ -186,6 +184,22 @@ class Chessboard {
                 makeMove(move)
             }
         }
+    }
+
+    fun makeMove(moveStr: String){
+
+        val fromStr = moveStr.slice(IntRange(0,1))
+        val toStr = moveStr.slice(IntRange(2,3))
+
+        val fromSquare = getSquare(fromStr)
+        val toSquare = getSquare(toStr)
+
+        val move = Move(
+            endSquare = toSquare, startSquare = fromSquare,
+            capturedPiece = toSquare.pieceType, pieceType = fromSquare.pieceType
+        )
+        makeMove(move)
+
     }
 
     /**
@@ -1427,16 +1441,6 @@ class Chessboard {
         }
     }
 
-    /**
-     * increments hashmap for current position and sets draw if three move repetition has happened
-     */
-    private fun checkThreefoldRepetition(){
-        val fenString = getPartialFenStringFromPosition()
-        positionMap[fenString] = (positionMap[fenString] ?:0) +1
-        if (positionMap.containsValue(3)){
-            result.postValue(GameResult.DRAW_BY_REPETITION)
-        }
-    }
 
     private fun updateKingPosition(move: Move){
         if (turn == Color.WHITE){
@@ -1447,12 +1451,12 @@ class Chessboard {
         }
     }
 
-    fun changeTurn(){
-        if (turn == Color.WHITE){
-            turn = Color.BLACK
+    fun colorInCheck(color: Color): Boolean {
+        if (color == Color.BLACK){
+            return blackInCheck
         }
         else {
-            turn = Color.WHITE
+            return whiteInCheck
         }
     }
 }

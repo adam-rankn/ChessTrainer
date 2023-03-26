@@ -3,7 +3,7 @@ package com.pinguapps.chesstrainer
 import com.pinguapps.chesstrainer.data.Chessgame
 import com.pinguapps.chesstrainer.data.Color
 import com.pinguapps.chesstrainer.data.PieceType
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TestChessGame {
@@ -36,10 +36,10 @@ class TestChessGame {
         val game = Chessgame()
         val board = game.chessboard
         board.validMoves = board.generatePieceMoves(board.getSquare("e2"))
-        game.makeMove(board.getSquare("e4"))
+        game.makeHumanMove(board.getSquare("e4"))
         board.validMoves = board.generatePieceMoves(board.getSquare("e7"))
         //board.selectedSquare = board.getSquare("e7")
-        game.makeMove(board.getSquare("e5"))
+        game.makeHumanMove(board.getSquare("e5"))
         assertEquals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2",
             game.generateFenStringFromPosition())
         game.undoMove()
@@ -55,10 +55,10 @@ class TestChessGame {
         val game = Chessgame()
         val board = game.chessboard
         board.validMoves = board.generatePieceMoves(board.getSquare("e2"))
-        game.makeMove(board.getSquare("e4"))
+        game.makeHumanMove(board.getSquare("e4"))
         board.validMoves = board.generatePieceMoves(board.getSquare("e7"))
         //board.selectedSquare = board.getSquare("e7")
-        game.makeMove(board.getSquare("e5"))
+        game.makeHumanMove(board.getSquare("e5"))
         assertEquals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2",
             game.generateFenStringFromPosition())
         game.undoMove()
@@ -80,10 +80,10 @@ class TestChessGame {
         val game = Chessgame()
         val board = game.chessboard
         board.validMoves = board.generatePieceMoves(board.getSquare("e2"))
-        game.makeMove(board.getSquare("e4"))
+        game.makeHumanMove(board.getSquare("e4"))
         board.validMoves = board.generatePieceMoves(board.getSquare("e7"))
         //board.selectedSquare = board.getSquare("e7")
-        game.makeMove(board.getSquare("e5"))
+        game.makeHumanMove(board.getSquare("e5"))
         game.undoAllMoves()
         assertEquals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
             game.generateFenStringFromPosition())
@@ -94,10 +94,10 @@ class TestChessGame {
         val game = Chessgame()
         val board = game.chessboard
         board.validMoves = board.generatePieceMoves(board.getSquare("e2"))
-        game.makeMove(board.getSquare("e4"))
+        game.makeHumanMove(board.getSquare("e4"))
         board.validMoves = board.generatePieceMoves(board.getSquare("e7"))
         //board.selectedSquare = board.getSquare("e7")
-        game.makeMove(board.getSquare("e5"))
+        game.makeHumanMove(board.getSquare("e5"))
         game.undoAllMoves()
         game.redoAllMoves()
         assertEquals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2",

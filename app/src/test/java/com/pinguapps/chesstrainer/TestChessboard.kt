@@ -1,9 +1,11 @@
 package com.pinguapps.chesstrainer
 
-import com.pinguapps.chesstrainer.data.*
-import org.junit.Test
-
+import com.pinguapps.chesstrainer.data.Chessboard
+import com.pinguapps.chesstrainer.data.Color
+import com.pinguapps.chesstrainer.data.PieceType
+import com.pinguapps.chesstrainer.data.PinnedState
 import org.junit.Assert.*
+import org.junit.Test
 
 
 class TestChessboard {
@@ -60,6 +62,12 @@ class TestChessboard {
         assertEquals(PieceType.PAWN,board.getSquare("f7").pieceType)
         assertEquals(PieceType.PAWN,board.getSquare("h7").pieceType)
 
+        assertTrue(board.blackCastleKingRights)
+        assertTrue(board.blackCastleQueenRights)
+        assertTrue(board.whiteCastleKingRights)
+        assertTrue(board.whiteCastleQueenRights)
+
+
     }
 
     @Test
@@ -98,9 +106,6 @@ class TestChessboard {
         board.loadPositionFenString("4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1")
 
        val movesList = board.generatePieceMoves(board.getSquare("e2"))
-        for (move in movesList){
-            println(move.endSquare.row)
-        }
         assertEquals(5, movesList.size)
 
         board.loadPositionFenString("8/8/8/8/3R4/8/8/8 w - - 0 1")

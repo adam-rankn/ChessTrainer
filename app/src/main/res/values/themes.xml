@@ -16,5 +16,6 @@
         <item name="colorHighlightPiece">@color/red</item>
         <item name="boardDarkSquare">@color/dark_green</item>
         <item name="boardLightSquare">@color/light_tan</item>
+        <item name="boardTargetSquare">@color/bright_blue</item>
     </style>
 </resources>

@@ -4,5 +4,6 @@
     <attr name="colorHighlightPiece" format="color" />
     <attr name="boardDarkSquare" format="color" />
     <attr name="boardLightSquare" format="color" />
+    <attr name="boardTargetSquare" format="color" />
 
 </resources>

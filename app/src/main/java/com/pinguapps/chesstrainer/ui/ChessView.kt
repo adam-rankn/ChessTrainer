@@ -3,12 +3,12 @@ package com.pinguapps.chesstrainer.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.*
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.PopupWindow
@@ -24,13 +24,14 @@ import com.pinguapps.chesstrainer.databinding.PopupGameOverBinding
 import com.pinguapps.chesstrainer.databinding.PopupPawnPromotionBinding
 import kotlin.math.abs
 import kotlin.math.floor
-import kotlin.math.min
 
 
 class ChessView : View {
     var game = Chessgame()
     var board = game.chessboard
     private var playerColor = game.playerColor
+
+
 
     constructor(context: Context?) : super(context) {
         init()
@@ -48,11 +49,11 @@ class ChessView : View {
         init()
     }
 
-    fun init() {
-        val colorBlack = MaterialColors.getColor(this, R.attr.boardDarkSquare)
-        val colorWhite = MaterialColors.getColor(this, R.attr.boardLightSquare)
-        WHITE_PAINT.color = colorBlack
-        BLACK_PAINT.color = colorWhite
+    private fun init() {
+        WHITE_PAINT.color = MaterialColors.getColor(this, R.attr.boardLightSquare)
+        BLACK_PAINT.color = MaterialColors.getColor(this, R.attr.boardDarkSquare)
+        HIGHLIGHT_PAINT.color = MaterialColors.getColor(this, R.attr.colorHighlightPiece)
+        TARGET_PAINT.color = MaterialColors.getColor(this, R.attr.boardTargetSquare)
     }
 
     /**
@@ -89,60 +90,58 @@ class ChessView : View {
         drawBoard(canvas)
         drawSelectedPiece(canvas)
         drawCheckHighlight(canvas)
+        drawTargetSquare(canvas)
         drawPieces(canvas)
         drawValidMoves(canvas)
-
     }
 
     /**
      * Draws the board board. If player is black, perspective is inverted
+     * @see drawSquare
      */
     private fun drawBoard(canvas: Canvas) {
+            for (col in 0..7) for (row in 0..7) {
+                val paint: Paint = if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
+                drawSquare(col,row,paint,canvas)
+            }
+    }
+
+    /**
+     * Draws the square at the given column and row. if player is black, board is flipped
+     * so perspective will be inverted
+     * @see drawBoard
+     * @see drawTargetSquare
+     * @see drawSelectedPiece
+     */
+    fun drawSquare(col: Int, row: Int, paint: Paint, canvas: Canvas){
         val tileSize = width.coerceAtMost(height) / 8
         if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
-            for (col in 0..7) for (row in 0..7) {
-                val paint: Paint =
-                    if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
-                canvas.drawRect(
-                    (col * tileSize).toFloat(),
-                    (row * tileSize).toFloat(),
-                    ((col + 1) * tileSize).toFloat(),
-                    ((row + 1) * tileSize).toFloat(),
-                    paint
-                )
-            }
+            canvas.drawRect(
+                (col * tileSize).toFloat(),
+                (row * tileSize).toFloat(),
+                ((col + 1) * tileSize).toFloat(),
+                ((row + 1) * tileSize).toFloat(),
+                paint
+            )
         }
         else {
-            for (col in 0..7) for (row in 0..7) {
-                val paint: Paint =
-                    if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
-                canvas.drawRect(
-                    (abs(col-7) * tileSize).toFloat(),
-                    (abs(row-7) * tileSize).toFloat(),
-                    ((abs(col-7) + 1) * tileSize).toFloat(),
-                    ((abs(row-7) + 1) * tileSize).toFloat(),
-                    paint
-                )
-            }
+            canvas.drawRect(
+                (abs(col-7) * tileSize).toFloat(),
+                (abs(row-7) * tileSize).toFloat(),
+                ((abs(col-7) + 1) * tileSize).toFloat(),
+                ((abs(row-7) + 1) * tileSize).toFloat(),
+                paint
+            )
         }
     }
 
     /**
-     * Draws all pieces on board. If player is black, perspective is inverted
+     * Draws all pieces on board.
      */
     private fun drawPieces(canvas: Canvas) {
-        if (playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
-            for (col in 0..7) for (row in 0..7) {
-                val square = board.board[col][row]
-                drawPiece(canvas, square)
-            }
-        }
-        else {
-            for (col in 0..7) for (row in 0..7) {
-                val square = board.board[col][row]
-                //val square = board.board[abs(col-7)][abs(row-7)]
-                drawPiece(canvas, square)
-            }
+        for (col in 0..7) for (row in 0..7) {
+            val square = board.board[col][row]
+            drawPiece(canvas, square)
         }
     }
 
@@ -188,39 +187,34 @@ class ChessView : View {
         else if (board.blackInCheck){
             val square = board.blackKingSquare
             drawPicture(canvas, square, R.drawable.ring)
-
+//todo make this look not bad
         }
     }
 
 
     /**
      * Highlights the square which contains currently selected piece
+     * @see drawSquare
      */
     private fun drawSelectedPiece(canvas: Canvas){
         if (board.selectedSquare != null) {
-            val tileSize = height.coerceAtMost(width) / 8
-            val col: Int
-            val row: Int
-            if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
-                col = board.selectedSquare!!.col
-                row = board.selectedSquare!!.row
-            }
-            else {
-                col = abs(board.selectedSquare!!.col - 7)
-                row = abs(board.selectedSquare!!.row - 7)
-            }
-
-            val colorHighlight = MaterialColors.getColor(this, R.attr.colorHighlightPiece)
-            HIGHLIGHT_PAINT.color = colorHighlight
-            val paint: Paint = HIGHLIGHT_PAINT 
-            canvas.drawRect(
-                (col * tileSize).toFloat(),
-                (row * tileSize).toFloat(),
-                ((col + 1) * tileSize).toFloat(),
-                ((row + 1) * tileSize).toFloat(),
-                paint)
+            val (col,row) = getCoordinatesFromSquare(board.selectedSquare!!)
+            val paint: Paint = HIGHLIGHT_PAINT
+            drawSquare(col, row, paint, canvas)
         }
 
+    }
+
+    /**
+     * Highlights the square which is the current puzzle target, if exists
+     * @see drawSquare
+     */
+    private fun drawTargetSquare(canvas: Canvas){
+        if (game.targetSquare!= null){
+            val (col, row ) = getCoordinatesFromSquare(game.targetSquare!!)
+            val paint: Paint = TARGET_PAINT
+            drawSquare(col,row,paint,canvas)
+        }
     }
 
     /**
@@ -253,6 +247,8 @@ class ChessView : View {
         }
     }
 
+    //accessibility will be handled through speech to text, therefore we do not need performclick here
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
@@ -308,6 +304,26 @@ class ChessView : View {
         return Pair(col,row)
     }
 
+    /**
+     * Helper function that gives the pixel coordinates of the given board square
+     * @param square the square to find the coords of
+     * @see getSquareFromCoordinates
+     */
+
+    private fun getCoordinatesFromSquare(square: Square): Pair<Int, Int> {
+        val col: Int
+        val row: Int
+        if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
+            col = square.col
+            row = square.row
+        }
+        else {
+            col = abs(square.col - 7)
+            row = abs(square.row - 7)
+        }
+        return Pair(col,row)
+    }
+
     /** Takes the appropriate action depending on whether a piece is selected
      * if piece is selected and clicked square is valid move, make move. If clicked on
      * own piece, select piece. If piece selected and clicked square is not valid, deselect piece
@@ -316,12 +332,16 @@ class ChessView : View {
      * @param row row of clicked square
      *
      */
-    private fun handleBoardClick(col: Int, row: Int){
+    private fun handleBoardClick(col: Int, row: Int) {
+        if (game.gameResult.value != GameResult.GAME_IN_PROGRESS){
+            return
+        }
         val highlightedSquare = board.selectedSquare
         val clickedSquare = board.board[col][row]
         if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
-            game.makeMove(clickedSquare)
+            game.makeHumanMove(clickedSquare)
             invalidate()
+
         } else {
             if (clickedSquare.pieceType != PieceType.NONE && board.turn == clickedSquare.pieceColor) {
                 //todo add check for player color
@@ -349,18 +369,7 @@ class ChessView : View {
                 for (move in moves) {
                     val circleSquare = move.endSquare
                     val tileSize = height.coerceAtMost(width) / 8
-                    val x: Int
-                    val y: Int
-
-                    if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
-                        x = circleSquare.col
-                        y = circleSquare.row
-                    }
-                    else {
-                        x = abs(circleSquare.col -7)
-                        y = abs (circleSquare.row - 7)
-                    }
-
+                    val (x,y) = getCoordinatesFromSquare(circleSquare)
                     val drawable: Drawable? =
                         ResourcesCompat.getDrawable(resources, R.drawable.circle, null)
                     val bitmapDrawable = (drawable as BitmapDrawable).bitmap
@@ -374,6 +383,8 @@ class ChessView : View {
             }
         }
     }
+
+
 
 
     /**
@@ -402,21 +413,25 @@ class ChessView : View {
 
                     popupBind.promotionKnight.setOnClickListener {
                         board.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        game.makeComputerMove()
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionBishop.setOnClickListener {
                         board.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        game.makeComputerMove()
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionRook.setOnClickListener {
                         board.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        game.makeComputerMove()
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionQueen.setOnClickListener {
                         board.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        game.makeComputerMove()
                         invalidate()
                         popupWhite.dismiss()
                     }
@@ -431,22 +446,31 @@ class ChessView : View {
                     popupBlack.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
 
                     popupBind.promotionKnight.setOnClickListener {
-                        board.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        Log.d("test","before pawn promotion to horsey")
+                        game.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        Log.d("test","pawn promotion to horsey")
+                        game.makeComputerMove()
                         invalidate()
                         popupBlack.dismiss()
                     }
                     popupBind.promotionBishop.setOnClickListener {
-                        board.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        game.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        Log.d("test","pawn promotion to b-shop")
                         invalidate()
+                        game.makeComputerMove()
                         popupBlack.dismiss()
                     }
                     popupBind.promotionRook.setOnClickListener {
-                        board.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        game.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        Log.d("test","pawn promotion to rook")
+                        game.makeComputerMove()
                         invalidate()
                         popupBlack.dismiss()
                     }
                     popupBind.promotionQueen.setOnClickListener {
-                        board.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        game.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.BLACK)
+                        Log.d("test","pawn promotion to queen")
+                        game.makeComputerMove()
                         invalidate()
                         popupBlack.dismiss()
                     }
@@ -461,7 +485,7 @@ class ChessView : View {
      */
     private fun observeGameResult() {
         findViewTreeLifecycleOwner()?.let { lifeCycleOwner ->
-            board.result.observe(lifeCycleOwner) { gameResult ->
+            game.gameResult.observe(lifeCycleOwner) { gameResult ->
                 val popupInflater = context.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
                 val popupBind = PopupGameOverBinding.inflate(popupInflater as LayoutInflater)
                 val popupGG = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, false)
@@ -533,14 +557,35 @@ class ChessView : View {
                         popupBind.resultText.setText(R.string.result_draw)
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
                     }
+                    GameResult.PUZZLE_WON -> {
+                        popupBind.resultText.setText(R.string.puzzle_passed)
+                        popupBind.btnRematch.setText(R.string.new_puzzle)
+                        popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
+                    }
+                    GameResult.PUZZLE_FAILED -> {
+                        popupBind.resultTypeText.setText(R.string.wrong_move)
+                        popupBind.resultText.setText(R.string.puzzle_failed)
+                        popupGG.isFocusable = true
+                        popupBind.btnRematch.setText(R.string.new_puzzle)
+                        popupBind.btnRetry.visibility = VISIBLE
+                        popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
+                    }
                     else -> {}
                 }
                 popupBind.btnMenu.setOnClickListener {
                     //todo go to menu
                 }
                 popupBind.btnRematch.setOnClickListener {
-                    //todo rematch
-                    //pass back to parent and re-init
+                    board.clearBoard()
+                    game.newGame()
+                    invalidate()
+                    popupGG.dismiss()
+                }
+
+                popupBind.btnRetry.setOnClickListener {
+                    game.restartGame()
+                    invalidate()
+                    popupGG.dismiss()
                 }
             }
 
@@ -551,6 +596,7 @@ class ChessView : View {
         private val WHITE_PAINT: Paint = Paint()
         private val BLACK_PAINT: Paint = Paint()
         private val HIGHLIGHT_PAINT: Paint = Paint()
+        private val TARGET_PAINT: Paint = Paint()
     }
 
 }
