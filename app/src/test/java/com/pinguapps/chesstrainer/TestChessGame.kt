@@ -1,6 +1,6 @@
 package com.pinguapps.chesstrainer
 
-import com.pinguapps.chesstrainer.data.Chessgame
+import com.pinguapps.chesstrainer.logic.Chessgame
 import com.pinguapps.chesstrainer.data.Color
 import com.pinguapps.chesstrainer.data.PieceType
 import org.junit.Assert.assertEquals

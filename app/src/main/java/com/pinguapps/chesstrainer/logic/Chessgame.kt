@@ -1,15 +1,13 @@
-package com.pinguapps.chesstrainer.data
+package com.pinguapps.chesstrainer.logic
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
-import com.pinguapps.chesstrainer.engine.cuckoo.chess.ComputerPlayer
+import com.pinguapps.chesstrainer.data.*
 import com.pinguapps.chesstrainer.logic.bots.BasicBot
 import com.pinguapps.chesstrainer.logic.bots.Bot
-import com.pinguapps.chesstrainer.util.fenToEnginePos
 import java.util.*
 
 
-open class Chessgame(color: Color= Color.WHITE, bot: Bot = BasicBot()) {
+open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
 
     val chessboard: Chessboard = Chessboard()
 
@@ -84,7 +82,6 @@ open class Chessgame(color: Color= Color.WHITE, bot: Bot = BasicBot()) {
 
     fun getPositionString(): String {
         return chessboard.getPartialFenStringFromPosition()
-        //todo
     }
 
     /**
@@ -104,8 +101,17 @@ open class Chessgame(color: Color= Color.WHITE, bot: Bot = BasicBot()) {
                 chessboard.makeMove(move)
                 futureMoves.clear()
                 updateFiftyMoveCounter(move)
-                //todo do this for computer
                 updateCountersAndCheckForDraw()
+
+                //pawn promotion
+                if (move.pieceType == PieceType.PAWN) {
+                    if (move.endSquare.row == 0) {
+                        setPawnPromoted(move.endSquare)
+                    }
+                    else if (move.endSquare.row == 7){
+                        setPawnPromoted(move.endSquare)
+                    }
+                }
 
                 // if move promotes,wait until user chooses promotion piece to call engine
 /*                if (!((move.endSquare.row == 0 || move.endSquare.row == 7) && (move.pieceType == PieceType.PAWN))){
@@ -116,7 +122,9 @@ open class Chessgame(color: Color= Color.WHITE, bot: Bot = BasicBot()) {
         }
     }
 
-
+    open fun setPawnPromoted(square: Square){
+        chessboard.promotionSquare.postValue(square)
+    }
 
     open fun makeComputerMove(){
         val moveStr = computer.getMove(generateFenStringFromPosition())
@@ -127,11 +135,15 @@ open class Chessgame(color: Color= Color.WHITE, bot: Bot = BasicBot()) {
         chessboard.makeMove(moveStr)
         updateCountersAndCheckForDraw()
 
+        //pawn promotion
+        if ('q' in moveStr.lowercase()) {
+            setPawnPromoted(chessboard.getSquare(moveStr.slice(IntRange(2,3))))
+        }
     }
 
-    fun promotePawn(square: Square, pieceType: PieceType, color: Color){
+    open fun promotePawn(square: Square, pieceType: PieceType, color: Color){
         chessboard.promotePawn(square,pieceType,color)
-        makeComputerMove()
+        //makeComputerMove()
     }
 
     /**
@@ -325,21 +337,6 @@ open class Chessgame(color: Color= Color.WHITE, bot: Bot = BasicBot()) {
         checkThreefoldRepetition()
         checkForInsufficientMaterial(fenString)
     }
-
-    fun  searchComputerMoves(){
-
-        val pos = fenToEnginePos(generateFenStringFromPosition())
-        //val search = Search(pos,longList,1, TranspositionTable(1), History())
-
-        val comp = ComputerPlayer()
-        val movesList = comp.returnTopMoves(pos,250)
-
-        for (i in movesList){
-            Log.d("test",i.first.toString())
-            Log.d("test",i.second.toString())
-        }
-    }
-
 
 
 }

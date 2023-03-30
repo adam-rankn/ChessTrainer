@@ -6,9 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewTreeLifecycleOwner
-import com.pinguapps.chesstrainer.data.puzzles.KnightPuzzleGame
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import com.pinguapps.chesstrainer.databinding.FragmentBotChessBinding
+import com.pinguapps.chesstrainer.logic.PassedPawnPuzzleGame
 
 
 class BotChessFragment: Fragment() {
@@ -33,9 +33,9 @@ class BotChessFragment: Fragment() {
         val chessViewModel: ChessboardViewModel by activityViewModels()
 
         val boardView = binding.chessboard
-        ViewTreeLifecycleOwner.set(boardView, this)
+        boardView.setViewTreeLifecycleOwner(this)
 
-        boardView.game = KnightPuzzleGame()
+        boardView.game = PassedPawnPuzzleGame()
         boardView.board = boardView.game.chessboard
         //boardView.game.loadPositionFenString("8/8/4k3/5r2/8/8/2BN4/2K5 w - - 0 1")
 

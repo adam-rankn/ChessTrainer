@@ -139,16 +139,6 @@ class Chessboard {
         startSquare.piece = Piece(Color.NONE, PieceType.NONE)
 
 
-        //pawn promotion
-        if (move.pieceType == PieceType.PAWN) {
-            if (move.endSquare.row == 0) {
-                promotionSquare.postValue(move.endSquare)
-            }
-            else if (move.endSquare.row == 7){
-                promotionSquare.postValue(move.endSquare)
-            }
-        }
-
         if (move.castling != Castleing.NONE){
             doCastleMove(move)
         }// castleing
@@ -187,7 +177,7 @@ class Chessboard {
     }
 
     fun makeMove(moveStr: String){
-
+        Log.d("test engine",moveStr)
         val fromStr = moveStr.slice(IntRange(0,1))
         val toStr = moveStr.slice(IntRange(2,3))
 
@@ -198,6 +188,7 @@ class Chessboard {
             endSquare = toSquare, startSquare = fromSquare,
             capturedPiece = toSquare.pieceType, pieceType = fromSquare.pieceType
         )
+        //todo castles
         makeMove(move)
 
     }

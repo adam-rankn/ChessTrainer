@@ -16,21 +16,24 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.google.android.material.color.MaterialColors
 import com.pinguapps.chesstrainer.R
-import com.pinguapps.chesstrainer.data.Chessgame
 import com.pinguapps.chesstrainer.data.GameResult
 import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
 import com.pinguapps.chesstrainer.databinding.PopupGameOverBinding
 import com.pinguapps.chesstrainer.databinding.PopupPawnPromotionBinding
+import com.pinguapps.chesstrainer.logic.Chessgame
 import kotlin.math.abs
 import kotlin.math.floor
 
 
 class ChessView : View {
     var game = Chessgame()
+        set(value) {
+            this.board = value.chessboard
+            field = value
+        }
     var board = game.chessboard
     private var playerColor = game.playerColor
-
 
 
     constructor(context: Context?) : super(context) {
@@ -134,6 +137,8 @@ class ChessView : View {
             )
         }
     }
+
+
 
     /**
      * Draws all pieces on board.
@@ -413,25 +418,24 @@ class ChessView : View {
 
                     popupBind.promotionKnight.setOnClickListener {
                         board.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.WHITE)
-                        game.makeComputerMove()
+
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionBishop.setOnClickListener {
                         board.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.WHITE)
-                        game.makeComputerMove()
+
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionRook.setOnClickListener {
                         board.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.WHITE)
-                        game.makeComputerMove()
+
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionQueen.setOnClickListener {
                         board.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.WHITE)
-                        game.makeComputerMove()
                         invalidate()
                         popupWhite.dismiss()
                     }
@@ -446,10 +450,9 @@ class ChessView : View {
                     popupBlack.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
 
                     popupBind.promotionKnight.setOnClickListener {
-                        Log.d("test","before pawn promotion to horsey")
                         game.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.BLACK)
                         Log.d("test","pawn promotion to horsey")
-                        game.makeComputerMove()
+
                         invalidate()
                         popupBlack.dismiss()
                     }
@@ -457,25 +460,24 @@ class ChessView : View {
                         game.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.BLACK)
                         Log.d("test","pawn promotion to b-shop")
                         invalidate()
-                        game.makeComputerMove()
+
                         popupBlack.dismiss()
                     }
                     popupBind.promotionRook.setOnClickListener {
                         game.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.BLACK)
                         Log.d("test","pawn promotion to rook")
-                        game.makeComputerMove()
+
                         invalidate()
                         popupBlack.dismiss()
                     }
                     popupBind.promotionQueen.setOnClickListener {
                         game.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.BLACK)
                         Log.d("test","pawn promotion to queen")
-                        game.makeComputerMove()
+
                         invalidate()
                         popupBlack.dismiss()
                     }
                 }
-
             }
         }
     }
@@ -563,7 +565,6 @@ class ChessView : View {
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
                     }
                     GameResult.PUZZLE_FAILED -> {
-                        popupBind.resultTypeText.setText(R.string.wrong_move)
                         popupBind.resultText.setText(R.string.puzzle_failed)
                         popupGG.isFocusable = true
                         popupBind.btnRematch.setText(R.string.new_puzzle)

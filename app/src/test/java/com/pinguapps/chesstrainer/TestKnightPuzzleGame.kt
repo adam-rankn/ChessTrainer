@@ -1,7 +1,7 @@
 package com.pinguapps.chesstrainer
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.pinguapps.chesstrainer.data.puzzles.KnightPuzzleGame
+import com.pinguapps.chesstrainer.logic.KnightPuzzleGame
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

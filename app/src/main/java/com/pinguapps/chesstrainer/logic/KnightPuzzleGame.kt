@@ -1,39 +1,22 @@
-package com.pinguapps.chesstrainer.data.puzzles
+package com.pinguapps.chesstrainer.logic
 
 import android.util.Log
-import com.pinguapps.chesstrainer.data.Chessgame
 import com.pinguapps.chesstrainer.data.Color
 import com.pinguapps.chesstrainer.data.GameResult
 import com.pinguapps.chesstrainer.data.Square
-import com.pinguapps.chesstrainer.logic.KnightMovePuzzle
-import kotlin.math.abs
+import com.pinguapps.chesstrainer.util.getSquareString
 
 class KnightPuzzleGame(
-    var puzzle: Triple<String, List<String>, Int> = KnightMovePuzzle().puzzle,
+    var puzzle: Triple<String, List<String>, Int> = KnightMovePuzzleGenerator().puzzle,
     //todo difficulty slider
 
     ): Chessgame() {
 
-
-    private fun getSquareString(square: Square): String {
-        val col = when (square.col){
-            0 -> "a"
-            1 -> "b"
-            2 -> "c"
-            3 ->"d"
-            4 ->"e"
-            5 ->"f"
-            6 ->"g"
-            7 ->"h"
-
-            else -> ""}
-        val row = (abs(square.row-7)+1).toString()
-        return "$col$row"
-    }
     init {
         chessboard.loadPositionFenString(puzzle.first)
         targetSquare = chessboard.getSquare(puzzle.second.last())
     }
+
 
     /**
      * checks the special win/loss conditions for this type of puzzle. If incorrect move has been
@@ -63,7 +46,7 @@ class KnightPuzzleGame(
      */
     override fun newGame() {
         super.newGame()
-        puzzle = KnightMovePuzzle().puzzle
+        puzzle = KnightMovePuzzleGenerator().puzzle
         chessboard.loadPositionFenString(puzzle.first)
         targetSquare = chessboard.getSquare(puzzle.second.last())
     }

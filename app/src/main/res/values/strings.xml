@@ -34,5 +34,8 @@
     <string name="wrong_move">Wrong Move Played</string>
     <string name="new_puzzle">New Puzzle</string>
 
+    <string name="back_button">Back</string>
+
+
 
 </resources>
