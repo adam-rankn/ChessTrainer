@@ -55,6 +55,10 @@ class Chessboard {
         validMoves = mutableListOf()
     }
 
+    fun resetBoard(){
+        loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    }
+
     fun getSquare(notation: String): Square {
         val colStr: String = notation.substring(0,1)
         val rowStr: String = notation.substring(1,2)

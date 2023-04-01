@@ -70,6 +70,7 @@ class ChessView : View {
         super.onAttachedToWindow()
         observePawnPromotion()
         observeGameResult()
+        observeBoardChanged()
     }
 
     /**
@@ -588,6 +589,15 @@ class ChessView : View {
                     invalidate()
                     popupGG.dismiss()
                 }
+            }
+
+        }
+    }
+
+    private fun observeBoardChanged() {
+        findViewTreeLifecycleOwner()?.let { lifeCycleOwner ->
+            game.undoesAndRedoesUsed.observe(lifeCycleOwner) { _ ->
+                invalidate()
             }
 
         }

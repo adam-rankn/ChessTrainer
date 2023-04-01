@@ -46,7 +46,7 @@ fun MenuScreen(
         }
 
         Button(onClick = {
-            navController.navigate("Pawn")
+            navController.navigate("Opening")
         },modifier = Modifier.fillMaxWidth().height(80.dp),
         ) {
             Text(text = "Study Openings",

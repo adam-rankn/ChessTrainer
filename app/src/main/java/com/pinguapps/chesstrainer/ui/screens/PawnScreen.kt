@@ -9,8 +9,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.pinguapps.chesstrainer.logic.PassedPawnPuzzleGame
+import com.pinguapps.chesstrainer.ui.composables.Chessboard
 import com.pinguapps.chesstrainer.ui.screens.ChessScreen
-import com.pinguapps.chesstrainer.ui.screens.Chessboard
+
 
 @Composable
 fun PawnScreen(

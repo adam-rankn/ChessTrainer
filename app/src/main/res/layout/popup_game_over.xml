@@ -18,7 +18,6 @@
         android:paddingStart="64dp"/>
     <TextView
         android:id="@+id/result_type_text"
-        android:text="by Checkmate"
         android:textSize="18sp"
         android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
@@ -33,16 +32,24 @@
 
         <Button
             android:id="@+id/btn_rematch"
-            android:text="rematch"
+            android:text="@string/rematch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp" />
         <Button
+            android:id="@+id/btn_retry"
+            android:text="@string/try_again"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:visibility="gone"/>
+        <Button
             android:id="@+id/btn_menu"
-            android:text="menu"
+            android:text="@string/menu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp" />
+
     </LinearLayout>
 
 </LinearLayout>

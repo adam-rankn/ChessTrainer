@@ -1,5 +1,6 @@
 package com.pinguapps.chesstrainer.logic
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.pinguapps.chesstrainer.data.*
 import com.pinguapps.chesstrainer.logic.bots.BasicBot
@@ -14,7 +15,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     private val computer: Bot = bot
     val playerColor = color
     val toMove = Color.WHITE
-    private val moveHistory: Stack<String> = Stack()
+    val moveHistory: Stack<String> = Stack()
     private val futureMoves: Stack<String> = Stack()
     val gameResult = MutableLiveData(GameResult.GAME_IN_PROGRESS)
     var hintsRemaining = 0
@@ -22,7 +23,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     var moveCounter = 1
     private val positionMap = mutableMapOf<String,Int>()
     var targetSquare: Square? = null
-
+    val undoesAndRedoesUsed = MutableLiveData(0)
 
 
     init {
@@ -36,6 +37,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      */
     open fun newGame(){
         chessboard.clearBoard()
+        chessboard.resetBoard()
         moveHistory.clear()
         futureMoves.clear()
         fiftyMoveCounter = 0
@@ -173,7 +175,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     }
 
     /**
-     * puts current bord position on the future move stack and loads previous position
+     * puts current board position on the future move stack and loads previous position
      * Also removes position from threefold repetition check map
      * @see redoMove
      *
@@ -188,11 +190,12 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
             removePosFromThreefoldMap()
             val lastMoveFenString = moveHistory.pop()
             loadPositionFenString(lastMoveFenString)
+            undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
         }
     }
 
     /**
-     * puts current bord position on the past move stack and loads position from top of future move stack
+     * puts current board position on the past move stack and loads position from top of future move stack
      * Also re-adds position to threefold repetition check map
      * @see undoMove
      *
@@ -206,6 +209,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
             moveHistory.push(currentBoardPosition)
             loadPositionFenString(futureMoves.pop())
             addPosToThreefoldMap()
+            undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
         }
     }
 
@@ -219,13 +223,18 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         if (moveHistory.isEmpty()){
             return
         }
+        Log.d("undoall","pushing current position")
         moveHistory.push(generateFenStringFromPosition())
-        while (moveHistory.isNotEmpty()){
+        while (moveHistory.size > 1){
             val position = stripMoveDataFromFen(moveHistory.peek())
             removePosFromThreefoldMap(position)
             futureMoves.push(moveHistory.pop())
         }
-        loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        loadPositionFenString(moveHistory.peek())
+        removePosFromThreefoldMap()
+        moveHistory.pop()
+
+        undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
     }
 
     /**
@@ -238,14 +247,18 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         if (futureMoves.isEmpty()){
             return
         }
-        while (futureMoves.isNotEmpty()){
+        moveHistory.push(generateFenStringFromPosition())
+        addPosToThreefoldMap()
+        //todo use fen directly
+        while (futureMoves.size > 1){
             val position = stripMoveDataFromFen(futureMoves.peek())
             addPosToThreefoldMap(position)
             moveHistory.push(futureMoves.pop())
         }
-        if (moveHistory.isNotEmpty()){
-            loadPositionFenString(moveHistory.peek())
-        }
+        loadPositionFenString(futureMoves.pop())
+        addPosToThreefoldMap()
+
+        undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
     }
 
     /**
