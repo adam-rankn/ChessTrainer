@@ -180,6 +180,7 @@ class Chessboard {
         }
     }
 
+    @Deprecated("use chessgame string converter instead")
     fun makeMove(moveStr: String){
         Log.d("test engine",moveStr)
         val fromStr = moveStr.slice(IntRange(0,1))

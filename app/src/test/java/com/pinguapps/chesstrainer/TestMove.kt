@@ -13,10 +13,10 @@ class TestMove {
         val board = Chessboard()
         val knightMove = Move(board.getSquare("f3"),board.getSquare("g1")
             ,PieceType.KNIGHT,PieceType.NONE)
-        assertEquals("g1f3",knightMove.shortNotation)
+        assertEquals("g1f3",knightMove.uciNotation)
 
         val e4Move = Move(board.getSquare("e4"),board.getSquare("e2")
             ,PieceType.PAWN,PieceType.NONE)
-        assertEquals("e2e4",e4Move.shortNotation)
+        assertEquals("e2e4",e4Move.uciNotation)
     }
 }

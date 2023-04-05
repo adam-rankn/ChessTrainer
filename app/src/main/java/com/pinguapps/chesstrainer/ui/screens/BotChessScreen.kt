@@ -9,13 +9,15 @@ import com.pinguapps.chesstrainer.ui.ChessboardViewModel
 import com.pinguapps.chesstrainer.ui.composables.ChessControlsBar
 import com.pinguapps.chesstrainer.ui.composables.Chessboard
 
+
+val chessboardViewModel = ChessboardViewModel()
 @Composable
 fun BotChessScreen(
     onCancelButtonClicked: () -> Unit,
     modifier: Modifier = Modifier
 ){
     val resources = LocalContext.current.resources
-    val chessboardViewModel = ChessboardViewModel()
+
 
 
     Column (
@@ -23,6 +25,12 @@ fun BotChessScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Chessboard(chessboardViewModel.chessgame)
-        ChessControlsBar(chessboardViewModel = chessboardViewModel)
+        ChessControlsBar(
+            onUndoPressed = { chessboardViewModel.undoMove()},
+            onRedoPressed = { chessboardViewModel.redoMove()},
+            onUndoAllPressed = { chessboardViewModel.undoAllMoves() },
+            onRedoAllPressed = { chessboardViewModel.redoAllMoves() },
+            onHintPressed = {}
+        )
     }
 }

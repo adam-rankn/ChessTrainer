@@ -8,5 +8,5 @@ import retrofit2.http.Url
 interface LichessApi {
 
     @GET
-    fun getMoves(@Url url: String): Call<LichessOpeningdata>
+    fun getMoves(@Url url: String): Call<LichessOpeningData>
 }

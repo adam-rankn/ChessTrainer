@@ -24,14 +24,13 @@ object RetrofitClient {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
 
-
-
+/*
     val retrofit: RetrofitInterface by lazy {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(gson))
             .baseUrl(Api.BASE_URL)
             .client(okHttpClient)
             .build().create(RetrofitInterface::class.java)
-    }
+    }*/
 
 }

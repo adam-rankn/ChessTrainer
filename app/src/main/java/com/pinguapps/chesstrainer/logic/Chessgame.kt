@@ -5,16 +5,40 @@ import androidx.lifecycle.MutableLiveData
 import com.pinguapps.chesstrainer.data.*
 import com.pinguapps.chesstrainer.logic.bots.BasicBot
 import com.pinguapps.chesstrainer.logic.bots.Bot
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import java.util.*
+import java.util.concurrent.Flow
 
 
 open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
 
     val chessboard: Chessboard = Chessboard()
 
+
     private val computer: Bot = bot
-    val playerColor = color
-    val toMove = Color.WHITE
+    var playerColor = color
+        set(value) {
+            when (value) {
+                Color.WHITE -> {
+                    this.cpuColor = Color.BLACK
+                    this.playerIsBlack.value = false
+                }
+                Color.BLACK -> {
+                    this.cpuColor = Color.WHITE
+                    this.playerIsBlack.value = true
+                }
+                Color.NONE -> {
+                    this.cpuColor = Color.NONE
+                    this.playerIsBlack.value = false
+                }
+            }
+            field = value
+        }
+
+    val playerIsBlack: MutableLiveData<Boolean> = MutableLiveData(false)
+    var cpuColor = Color.BLACK
+    val toMove: Color get() = chessboard.turn
     val moveHistory: Stack<String> = Stack()
     private val futureMoves: Stack<String> = Stack()
     val gameResult = MutableLiveData(GameResult.GAME_IN_PROGRESS)
@@ -23,7 +47,8 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     var moveCounter = 1
     private val positionMap = mutableMapOf<String,Int>()
     var targetSquare: Square? = null
-    val undoesAndRedoesUsed = MutableLiveData(0)
+    val lastPosition: MutableLiveData<String> = MutableLiveData("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+
 
 
     init {
@@ -44,6 +69,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         moveCounter = 1
         positionMap.clear()
         gameResult.postValue(GameResult.GAME_IN_PROGRESS)
+        lastPosition.value = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     }
 
     /**
@@ -95,33 +121,71 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     open fun makeHumanMove(square: Square){
         for (move in chessboard.validMoves) {
             if (move.endSquare == square) {
-                moveHistory.push(generateFenStringFromPosition())
-                if (chessboard.turn == Color.BLACK){
-                    moveCounter ++
-                }
-                chessboard.selectedSquare = move.startSquare // needed in case of speech to text
-                chessboard.makeMove(move)
-                futureMoves.clear()
-                updateFiftyMoveCounter(move)
-                updateCountersAndCheckForDraw()
-
-                //pawn promotion
-                if (move.pieceType == PieceType.PAWN) {
-                    if (move.endSquare.row == 0) {
-                        setPawnPromoted(move.endSquare)
-                    }
-                    else if (move.endSquare.row == 7){
-                        setPawnPromoted(move.endSquare)
-                    }
-                }
-
-                // if move promotes,wait until user chooses promotion piece to call engine
-/*                if (!((move.endSquare.row == 0 || move.endSquare.row == 7) && (move.pieceType == PieceType.PAWN))){
-                    makeComputerMove()
-                }*/
+                doMove(move)
                 break
             }
         }
+    }
+
+    fun makeMove(uci: String){
+        //todo promortion
+        val start = uci.slice(IntRange(0,1))
+        val end = uci.slice(IntRange(2,3))
+
+        val promotion: PieceType = if (uci.length == 5){
+            when (uci[4]) {
+                'q' -> PieceType.QUEEN
+                'r' -> PieceType.ROOK
+                'n' -> PieceType.KNIGHT
+                'b' -> PieceType.BISHOP
+                else -> PieceType.NONE
+            }
+            //todo promo
+        } else {
+            PieceType.NONE
+        }
+        val startSquare = chessboard.getSquare(start)
+        val endSquare = chessboard.getSquare(end)
+
+        val castling = when (uci) {
+            "e1h1" -> Castleing.WHITE_KING
+            "e1a1" -> Castleing.WHITE_QUEEN
+            "e8h8" -> Castleing.BLACK_KING
+            "e8a8" -> Castleing.BLACK_QUEEN
+            else -> Castleing.NONE
+        }
+
+        val move = Move(
+            startSquare = startSquare,
+            endSquare = endSquare,
+            pieceType = startSquare.pieceType,
+            capturedPiece = endSquare.pieceType,
+            castling = castling
+            )
+        doMove(move)
+    }
+
+    private fun doMove(move: Move){
+        moveHistory.push(generateFenStringFromPosition())
+        if (chessboard.turn == Color.BLACK){
+            moveCounter ++
+        }
+        chessboard.selectedSquare = move.startSquare // needed in case of speech to text
+        chessboard.makeMove(move)
+        futureMoves.clear()
+        updateFiftyMoveCounter(move)
+        updateCountersAndCheckForDraw()
+
+        //pawn promotion
+        if (move.pieceType == PieceType.PAWN) {
+            if (move.endSquare.row == 0) {
+                setPawnPromoted(move.endSquare)
+            }
+            else if (move.endSquare.row == 7){
+                setPawnPromoted(move.endSquare)
+            }
+        }
+        lastPosition.postValue(generateFenStringFromPosition())
     }
 
     open fun setPawnPromoted(square: Square){
@@ -190,7 +254,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
             removePosFromThreefoldMap()
             val lastMoveFenString = moveHistory.pop()
             loadPositionFenString(lastMoveFenString)
-            undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
+            lastPosition.value = lastMoveFenString
         }
     }
 
@@ -207,9 +271,10 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         if (futureMoves.isNotEmpty()) {
             val currentBoardPosition = generateFenStringFromPosition()
             moveHistory.push(currentBoardPosition)
+            lastPosition.value = futureMoves.peek()
             loadPositionFenString(futureMoves.pop())
             addPosToThreefoldMap()
-            undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
+
         }
     }
 
@@ -231,10 +296,12 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
             futureMoves.push(moveHistory.pop())
         }
         loadPositionFenString(moveHistory.peek())
+        lastPosition.value = moveHistory.peek()
         removePosFromThreefoldMap()
         moveHistory.pop()
 
-        undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
+
+
     }
 
     /**
@@ -249,16 +316,15 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         }
         moveHistory.push(generateFenStringFromPosition())
         addPosToThreefoldMap()
-        //todo use fen directly
         while (futureMoves.size > 1){
             val position = stripMoveDataFromFen(futureMoves.peek())
             addPosToThreefoldMap(position)
             moveHistory.push(futureMoves.pop())
         }
+        lastPosition.value = futureMoves.peek()
         loadPositionFenString(futureMoves.pop())
         addPosToThreefoldMap()
 
-        undoesAndRedoesUsed.value = undoesAndRedoesUsed.value?.plus(1)
     }
 
     /**

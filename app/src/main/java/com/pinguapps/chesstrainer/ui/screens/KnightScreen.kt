@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.pinguapps.chesstrainer.logic.KnightPuzzleGame
+import com.pinguapps.chesstrainer.ui.composables.Chessboard
 
 @Composable
 fun KnightScreen(

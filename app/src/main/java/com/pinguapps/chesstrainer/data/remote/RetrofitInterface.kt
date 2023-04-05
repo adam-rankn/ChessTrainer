@@ -8,6 +8,6 @@ interface RetrofitInterface {
 
 
     @GET("master?fen={fen}")
-    fun getMoves(@Url url: String): Call<LichessOpeningdata>
+    fun getMoves(@Url url: String): Call<LichessOpeningData>
 
 }

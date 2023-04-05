@@ -3,14 +3,14 @@ package com.pinguapps.chesstrainer.data.remote
 import com.google.gson.annotations.SerializedName
 
 
-data class LichessOpeningdata (
+data class LichessOpeningData (
 
     @SerializedName("white"    ) var white    : Int?                = null,
     @SerializedName("draws"    ) var draws    : Int?                = null,
     @SerializedName("black"    ) var black    : Int?                = null,
     @SerializedName("moves"    ) var moves    : ArrayList<Moves>    = arrayListOf(),
-    @SerializedName("topGames" ) var topGames : ArrayList<TopGames> = arrayListOf(),
-    @SerializedName("opening"  ) var opening  : String?             = null
+    //@SerializedName("topGames" ) var topGames : ArrayList<TopGames> = arrayListOf(),
+    //@SerializedName("opening"  ) var opening  : String?             = null
 )
 
 data class Moves (
@@ -21,7 +21,7 @@ data class Moves (
     @SerializedName("white"         ) var white         : Int?    = null,
     @SerializedName("draws"         ) var draws         : Int?    = null,
     @SerializedName("black"         ) var black         : Int?    = null,
-    @SerializedName("game"          ) var game          : String? = null
+    //@SerializedName("game"          ) var game          : String? = null
 )
 
 data class Black (

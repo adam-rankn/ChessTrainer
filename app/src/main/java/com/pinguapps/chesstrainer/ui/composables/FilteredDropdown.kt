@@ -105,7 +105,8 @@ fun <T> List<T>.asAutoCompleteEntities(filter: CustomFilter<T>): List<ValueAutoC
 
 @ExperimentalAnimationApi
 @Composable
-fun <T : AutoCompleteEntity> AutoCompleteBox(
+fun <T : AutoCompleteEntity, K> AutoCompleteBox(
+    keySelector: (T) -> K,
     items: List<T>,
     itemContent: @Composable (T) -> Unit,
     content: @Composable AutoCompleteScope<T>.() -> Unit
@@ -121,17 +122,22 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
         AnimatedVisibility(visible = autoCompleteState.isSearching) {
             LazyColumn(
                 modifier = Modifier.autoComplete(autoCompleteState),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                items(autoCompleteState.filteredItems) { item ->
-                    Box(modifier = Modifier.clickable { autoCompleteState.selectItem(item) }.fillMaxHeight()) {
+                items(autoCompleteState.filteredItems,
+                ) { item ->
+                    Box(modifier = Modifier
+                        .clickable { autoCompleteState.selectItem(item) }
+                        .fillMaxHeight()) {
                         itemContent(item)
                     }
+                }
+                    
                 }
             }
         }
     }
-}
+
 
 private fun Modifier.autoComplete(
     autoCompleteItemScope: AutoCompleteDesignScope
@@ -162,7 +168,7 @@ fun TextSearchBar(
 ) {
     OutlinedTextField(
         modifier = modifier
-            .fillMaxWidth(.9f)
+            .fillMaxWidth(1f)
             .onFocusChanged { onFocusChanged(it) },
         value = value,
         onValueChange = { query ->

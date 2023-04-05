@@ -2,11 +2,11 @@ package com.pinguapps.chesstrainer.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.pinguapps.chesstrainer.data.Square
 import com.pinguapps.chesstrainer.logic.Chessgame
 
-class ChessboardViewModel: ViewModel() {
+open class ChessboardViewModel: ViewModel() {
 
-    //val chessboardFlow = MutableStateFlow(Chessboard())
     val chessgame = Chessgame()
 
     /**
@@ -37,6 +37,7 @@ class ChessboardViewModel: ViewModel() {
      */
     fun undoAllMoves(){
         chessgame.undoAllMoves()
+        Log.d("viewmodel","undo all moves pressed")
     }
 
     /**
@@ -52,8 +53,4 @@ class ChessboardViewModel: ViewModel() {
     fun resetGame(){
         chessgame.newGame()
     }
-
-
-
-
 }

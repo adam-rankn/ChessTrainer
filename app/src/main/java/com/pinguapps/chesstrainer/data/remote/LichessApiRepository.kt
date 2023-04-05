@@ -1,9 +1,6 @@
 package com.pinguapps.chesstrainer.data.remote
 
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Response
 import java.io.IOException
@@ -15,12 +12,12 @@ class LichessApiRepository {
 
     /**
      * gets the data from lichess opening explorer api from the given position
-     * @param fen the FEN string to search for
+     * @param url
      */
-    fun getMovesFromFen(fen: String): LichessResponse<LichessOpeningdata> {
-        val call: Call<LichessOpeningdata> = chessApi.getMoves(fen)
+    fun getMovesFromFen(url: String): LichessResponse<LichessOpeningData> {
+        val call: Call<LichessOpeningData> = chessApi.getMoves(url)
         return try {
-            val response: Response<LichessOpeningdata> = call.execute()
+            val response: Response<LichessOpeningData> = call.execute()
             LichessResponse.Success(response.body())
 
         } catch (e: IOException) {
