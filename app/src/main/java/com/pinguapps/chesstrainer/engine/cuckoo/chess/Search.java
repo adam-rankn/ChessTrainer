@@ -29,19 +29,18 @@ public class Search {
     final static int plyScale = 8; // Fractional ply resolution
 
     Position pos;
-    private MoveGen moveGen;
-    private Evaluate eval;
-    private KillerTable kt;
-    private History ht;
-    private long[] posHashList;         // List of hashes for previous positions up to the last "zeroing" move.
+    private final MoveGen moveGen;
+    private final Evaluate eval;
+    private final KillerTable kt;
+    private final History ht;
+    private final long[] posHashList;         // List of hashes for previous positions up to the last "zeroing" move.
     private int posHashListSize;        // Number of used entries in posHashList
-    private int posHashFirstNew;        // First entry in posHashList that has not been played OTB.
-    private TranspositionTable tt;
-    private TreeLogger log = null;
+    private final TranspositionTable tt;
+
 
     private static final class SearchTreeInfo {
-        UndoInfo undoInfo;
-        Move hashMove;         // Temporary storage for local hashMove variable
+        final UndoInfo undoInfo;
+        final Move hashMove;         // Temporary storage for local hashMove variable
         boolean allowNullMove; // Don't allow two null-moves in a row
         Move bestMove;         // Copy of the best found move at this ply
         Move currentMove;      // Move currently being searched
@@ -54,7 +53,7 @@ public class Search {
             bestMove = new Move(0, 0, 0);
         }
     }
-    private SearchTreeInfo[] searchTreeInfo;
+    private final SearchTreeInfo[] searchTreeInfo;
 
     // Time management
     private long tStart;            // Time when search started
@@ -68,7 +67,6 @@ public class Search {
     // Reduced strength variables
     private int strength = 1000; // Strength (0-1000)
     private int maxNPS = 0;      // If > 0, reduce strength by limiting NPS
-    private boolean weak = false;        // Set to strength < 1000
     private long randomSeed = 0;
 
     // Search statistics stuff
@@ -95,7 +93,6 @@ public class Search {
         this.ht = ht;
         eval = new Evaluate();
         kt = new KillerTable();
-        posHashFirstNew = posHashListSize;
         initNodeStats();
         minTimeMillis = -1;
         maxTimeMillis = -1;
@@ -112,9 +109,6 @@ public class Search {
         private static final long serialVersionUID = -5546906604987117015L;
         public StopSearch() {
         }
-        public StopSearch(String msg) {
-            super(msg);
-        }
     }
 
     /**
@@ -129,14 +123,11 @@ public class Search {
     }
 
     private Listener listener;
-    public void setListener(Listener listener) {
-        this.listener = listener;
-    }
 
     private final static class MoveInfo {
-        Move move;
+        final Move move;
         long nodes;
-        MoveInfo(Move m, int n) { move = m;  nodes = n; }
+        MoveInfo(Move m) { move = m;  nodes = 0; }
         public static final class SortByScore implements Comparator<MoveInfo> {
             public int compare(MoveInfo mi1, MoveInfo mi2) {
                 if ((mi1 == null) && (mi2 == null))
@@ -172,18 +163,6 @@ public class Search {
         maxTimeMillis = maxTimeLimit;
     }
 
-    final public void setStrength(int strength, long randomSeed, int maxNPS) {
-        if (strength < 0) strength = 0;
-        if (strength > 1000) strength = 1000;
-        this.strength = strength;
-        weak = strength < 1000;
-        this.randomSeed = randomSeed;
-        this.maxNPS = maxNPS;
-        nodesBetweenTimeCheck = 5000;
-        if (maxNPS > 0)
-            nodesBetweenTimeCheck = Math.min(Math.max(maxNPS / 100, 1), nodesBetweenTimeCheck);
-    }
-
     final public Move iterativeDeepening(MoveGen.MoveList scMovesIn,
             int maxDepth, long initialMaxNodes, boolean verbose) {
         tStart = System.currentTimeMillis();
@@ -212,7 +191,7 @@ public class Search {
             for (int mi = 0, len = 0; mi < scMovesIn.size; mi++) {
                 if (includedMoves[mi]) {
                     Move m = scMovesIn.m[mi];
-                    scMoves[len++] = new MoveInfo(m, 0);
+                    scMoves[len++] = new MoveInfo(m);
                 }
             }
         }
@@ -226,8 +205,8 @@ public class Search {
         if ((maxDepth < 0) || (maxDepth > 100)) {
             maxDepth = 100;
         }
-        for (int i = 0; i < searchTreeInfo.length; i++) {
-            searchTreeInfo[i].allowNullMove = true;
+        for (SearchTreeInfo treeInfo : searchTreeInfo) {
+            treeInfo.allowNullMove = true;
         }
         try {
         for (int depthS = plyScale; ; depthS += plyScale, firstIteration = false) {
@@ -263,11 +242,6 @@ public class Search {
                             lmrS = plyScale;
                     }
                 }
-/*                long nodes0 = nodes;
-                long qNodes0 = qNodes;
-                System.out.printf("%2d %5s %5d %5d %6s %6s ",
-                        mi, "-", alpha, beta, "-", "-");
-                System.out.printf("%-6s...\n", TextIO.moveToUCIString(m)); */
                 pos.makeMove(m, ui);
                 nodes++;
                 totalNodes++;
@@ -353,9 +327,6 @@ public class Search {
                         }
                     }
                     if (verbose) {
-/*                        System.out.printf("%2d %5d %5d %5d %6d %6d ",
-                                mi, score, alpha, beta, nodes-nodes0, qNodes-qNodes0);
-                        System.out.printf("%-6s\n", TextIO.moveToUCIString(m)); */
                         System.out.printf("%-6s %6d %6d %6d%s %s\n",
                                 TextIO.moveToString(pos, m, false), score,
                                 nodes, qNodes, (score > alpha ? " *" : ""), PV);
@@ -371,9 +342,7 @@ public class Search {
                     if ((score > alpha) || (mi == 0)) {
                         alpha = score;
                         MoveInfo tmp = scMoves[mi];
-                        for (int i = mi - 1; i >= 0;  i--) {
-                            scMoves[i + 1] = scMoves[i];
-                        }
+                        System.arraycopy(scMoves, 0, scMoves, 1, mi - 1 + 1);
                         scMoves[0] = tmp;
                         bestMove = scMoves[0].move;
                     }
@@ -425,9 +394,6 @@ public class Search {
         }
         notifyStats();
 
-        if (log != null) {
-            log = null;
-        }
         return bestMove;
     }
 
@@ -467,11 +433,7 @@ public class Search {
      */
     final public int negaScout(int alpha, int beta, int ply, int depth, int recaptureSquare,
                                final boolean inCheck) throws StopSearch {
-        if (log != null) {
-            SearchTreeInfo sti = searchTreeInfo[ply-1];
-            long idx = log.logNodeStart(sti.nodeIdx, sti.currentMove, alpha, beta, ply, depth/plyScale);
-            searchTreeInfo[ply].nodeIdx = idx;
-        }
+
         if (nodesToGo <= 0) {
             nodesToGo = nodesBetweenTimeCheck;
             long tNow = System.currentTimeMillis();
@@ -519,12 +481,11 @@ public class Search {
                         (ent.type == TTEntry.T_LE) && (score <= alpha)) {
                     if (score >= beta) {
                         hashMove = sti.hashMove;
-                        if ((hashMove != null) && (hashMove.from != hashMove.to))
+                        if (hashMove.from != hashMove.to)
                             if (pos.getPiece(hashMove.to) == Piece.EMPTY)
                                 kt.addKiller(ply, hashMove);
                     }
                     sti.bestMove = hashMove;
-                    if (log != null) log.logNodeEnd(searchTreeInfo[ply].nodeIdx, score, ent.type, evalScore, hKey);
                     return score;
                 }
             }
@@ -585,7 +546,6 @@ public class Search {
                 if (evalScore - margin >= beta) {
                     emptyMove.score = evalScore - margin;
                     tt.insert(hKey, emptyMove, TTEntry.T_GE, ply, depth, evalScore);
-                    if (log != null) log.logNodeEnd(sti.nodeIdx, evalScore - margin, TTEntry.T_GE, evalScore, hKey);
                     return evalScore - margin;
                 }
             }
@@ -596,9 +556,7 @@ public class Search {
         if (    (depth >= 3*plyScale) && !inCheck && sti.allowNullMove &&
                 (Math.abs(beta) <= MATE0 / 2)) {
             if (MoveGen.canTakeKing(pos)) {
-                int score = MATE0 - ply;
-                if (log != null) log.logNodeEnd(sti.nodeIdx, score, TTEntry.T_EXACT, evalScore, hKey);
-                return score;
+                return MATE0 - ply;
             }
             boolean nullOk;
             if (pos.whiteMove) {
@@ -628,7 +586,6 @@ public class Search {
                         score = beta;
                     emptyMove.score = score;
                     tt.insert(hKey, emptyMove, TTEntry.T_GE, ply, depth, evalScore);
-                    if (log != null) log.logNodeEnd(sti.nodeIdx, score, TTEntry.T_GE, evalScore, hKey);
                     return score;
                 } else {
                     if ((searchTreeInfo[ply-1].lmr > 0) && (depth < 5*plyScale)) {
@@ -638,7 +595,6 @@ public class Search {
                             // if the threat move was made possible by a reduced
                             // move on the previous ply, the reduction was unsafe.
                             // Return alpha to trigger a non-reduced re-search.
-                            if (log != null) log.logNodeEnd(sti.nodeIdx, alpha, TTEntry.T_LE, evalScore, hKey);
                             return alpha;
                         }
                     }
@@ -711,9 +667,7 @@ public class Search {
             Move m = moves.m[mi];
             if (pos.getPiece(m.to) == (pos.whiteMove ? Piece.BKING : Piece.WKING)) {
                 moveGen.returnMoveList(moves);
-                int score = MATE0-ply;
-                if (log != null) log.logNodeEnd(sti.nodeIdx, score, TTEntry.T_EXACT, evalScore, hKey);
-                return score;       // King capture
+                return MATE0-ply;       // King capture
             }
             int newCaptureSquare = -1;
             boolean isCapture = (pos.getPiece(m.to) != Piece.EMPTY);
@@ -769,7 +723,7 @@ public class Search {
                         if ((lmrCount > 3) && (depth > 3*plyScale) && !isCapture) {
                             lmr = 2*plyScale;
                         } else {
-                            lmr = 1*plyScale;
+                            lmr = plyScale;
                         }
                     }
                 }
@@ -792,15 +746,7 @@ public class Search {
                 totalNodes++;
                 nodesToGo--;
                 sti.currentMove = m;
-/*              long nodes0 = nodes;
-                long qNodes0 = qNodes;
-                if ((ply < 3) && (newDepth > plyScale)) {
-                    System.out.printf("%2d %5s %5d %5d %6s %6s ",
-                            mi, "-", alpha, beta, "-", "-");
-                    for (int i = 0; i < ply; i++)
-                        System.out.printf("      ");
-                    System.out.printf("%-6s...\n", TextIO.moveToUCIString(m));
-                } */
+
                 sti.lmr = lmr;
                 score = -negaScout(-b, -alpha, ply + 1, newDepth, newCaptureSquare, givesCheck);
                 if (((lmr > 0) && (score > alpha)) ||
@@ -809,20 +755,9 @@ public class Search {
                     newDepth += lmr;
                     score = -negaScout(-beta, -alpha, ply + 1, newDepth, newCaptureSquare, givesCheck);
                 }
-/*              if (ply <= 3) {
-                    System.out.printf("%2d %5d %5d %5d %6d %6d ",
-                            mi, score, alpha, beta, nodes-nodes0, qNodes-qNodes0);
-                    for (int i = 0; i < ply; i++)
-                        System.out.printf("      ");
-                    System.out.printf("%-6s\n", TextIO.moveToUCIString(m));
-                }*/
                 posHashListSize--;
                 pos.unMakeMove(m, ui);
             }
-            if (weak && haveLegalMoves)
-                if (weakPlaySkipMove(pos, m, ply))
-                    score = illegalScore;
-            m.score = score;
 
             if (score != illegalScore) {
                 haveLegalMoves = true;
@@ -847,23 +782,19 @@ public class Search {
                 }
                 tt.insert(hKey, m, TTEntry.T_GE, ply, depth, evalScore);
                 moveGen.returnMoveList(moves);
-                if (log != null) log.logNodeEnd(sti.nodeIdx, alpha, TTEntry.T_GE, evalScore, hKey);
                 return alpha;
             }
             b = alpha + 1;
         }
         if (!haveLegalMoves && !inCheck) {
             moveGen.returnMoveList(moves);
-            if (log != null) log.logNodeEnd(sti.nodeIdx, 0, TranspositionTable.TTEntry.T_EXACT, evalScore, hKey);
             return 0;       // Stale-mate
         }
         if (bestMove >= 0) {
             tt.insert(hKey, moves.m[bestMove], TranspositionTable.TTEntry.T_EXACT, ply, depth, evalScore);
-            if (log != null) log.logNodeEnd(sti.nodeIdx, bestScore, TTEntry.T_EXACT, evalScore, hKey);
         } else {
             emptyMove.score = bestScore;
             tt.insert(hKey, emptyMove, TTEntry.T_LE, ply, depth, evalScore);
-            if (log != null) log.logNodeEnd(sti.nodeIdx, bestScore, TTEntry.T_LE, evalScore, hKey);
         }
         moveGen.returnMoveList(moves);
         return bestScore;
@@ -873,30 +804,8 @@ public class Search {
     private boolean relatedMoves(Move m1, Move m2) {
         if ((m1.from == m1.to) || (m2.from == m2.to))
             return false;
-        if ((m1.to == m2.from) || (m1.from == m2.to) ||
-            ((BitBoard.squaresBetween[m2.from][m2.to] & (1L << m1.from)) != 0))
-            return true;
-        return false;
-    }
-
-    /** Return true if move should be skipped in order to make engine play weaker. */
-    private boolean weakPlaySkipMove(Position pos, Move m, int ply) {
-        long rndL = pos.zobristHash() ^ Position.psHashKeys[0][m.from] ^
-                    Position.psHashKeys[0][m.to] ^ randomSeed;
-        double rnd = ((rndL & 0x7fffffffffffffffL) % 1000000000) / 1e9;
-
-        double s = strength * 1e-3;
-        double offs = (17 - 50 * s) / 3;
-        double effPly = ply * Evaluate.interpolate(pos.wMtrl + pos.bMtrl, 0, 30, Evaluate.qV * 4, 100) * 1e-2;
-        double t = effPly + offs;
-        double p = 1/(1+Math.exp(t)); // Probability to "see" move
-        boolean easyMove = ((pos.getPiece(m.to) != Piece.EMPTY) ||
-                            (ply < 2) || (searchTreeInfo[ply-2].currentMove.to == m.from));
-        if (easyMove)
-            p = 1-(1-p)*(1-p);
-        if (rnd > p)
-            return true;
-        return false;
+        return (m1.to == m2.from) || (m1.from == m2.to) ||
+                ((BitBoard.squaresBetween[m2.from][m2.to] & (1L << m1.from)) != 0);
     }
 
     private static boolean passedPawnPush(Position pos, Move m) {
@@ -1055,8 +964,8 @@ public class Search {
         return SEE(m) < 0;
     }
 
-    private int[] captures = new int[64];   // Value of captured pieces
-    private UndoInfo seeUi = new UndoInfo();
+    private final int[] captures = new int[64];   // Value of captured pieces
+    private final UndoInfo seeUi = new UndoInfo();
 
     /**
      * Static exchange evaluation function.
@@ -1080,7 +989,7 @@ public class Search {
         int valOnSquare = Evaluate.pieceValue[pos.getPiece(square)];
         long occupied = pos.whiteBB | pos.blackBB;
         while (true) {
-            int bestValue = Integer.MAX_VALUE;
+            int bestValue;
             long atk;
             if (white) {
                 atk = BitBoard.bPawnAttacks[square] & pos.pieceTypeBB[Piece.WPAWN] & occupied;

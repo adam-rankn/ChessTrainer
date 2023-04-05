@@ -15,7 +15,6 @@ class OpeningViewModel: ChessboardViewModel() {
     private val lichessRepository = LichessApiRepository()
 
     val lichessLines: MutableStateFlow<List<LichessDbMove>> = MutableStateFlow(listOf())
-    val lichessComputerMoves: MutableStateFlow<List<LichessDbMove>> = MutableStateFlow(listOf())
 
     val lichessErrorMessage: MutableStateFlow<String> = MutableStateFlow("Exception")
 
@@ -75,12 +74,12 @@ class OpeningViewModel: ChessboardViewModel() {
         Log.d("openvm","player = ${chessgame.playerColor}")
     }
 
-    suspend fun onHumanMoveMade(start:Square, end:Square) {
+    fun onHumanMoveMade(start:Square, end:Square) {
         //todo check human move and report
         makeCpuMove()
     }
 
-    suspend fun makeCpuMove(){
+    fun makeCpuMove(){
         if (chessgame.toMove == chessgame.cpuColor) {
             Log.d("openvm", "to move (cpu): ${chessgame.cpuColor}")
             val pos = chessgame.generateFenStringFromPosition()
@@ -96,7 +95,7 @@ class OpeningViewModel: ChessboardViewModel() {
                         val linesData = response.data?.let { getLinesData(it) }
                         if (linesData != null) {
                             chessgame.makeMove(linesData[0].uci)
-                            Log.d("openvm","cpu moved: ${linesData[0].uci}")
+         Log.d("openvm","cpu moved: ${linesData[0].uci}")
                             Log.d("openvm", "to move (human): ${chessgame.toMove}")
                             getMoves(chessgame.generateFenStringFromPosition(),lichessLines)
                         }

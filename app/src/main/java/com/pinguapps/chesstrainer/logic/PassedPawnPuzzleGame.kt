@@ -4,8 +4,6 @@ import com.pinguapps.chesstrainer.data.Color
 import com.pinguapps.chesstrainer.data.GameResult
 import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
-import com.pinguapps.chesstrainer.logic.Chessgame
-import com.pinguapps.chesstrainer.logic.PassedPawnPuzzleGenerator
 
 class PassedPawnPuzzleGame(
     var puzzle: String = PassedPawnPuzzleGenerator().generateRandomPawnPuzzle()

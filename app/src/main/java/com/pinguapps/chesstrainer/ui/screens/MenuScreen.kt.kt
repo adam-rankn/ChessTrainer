@@ -1,4 +1,4 @@
-package com.pinguapps.chesstrainer.ui
+package com.pinguapps.chesstrainer.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button

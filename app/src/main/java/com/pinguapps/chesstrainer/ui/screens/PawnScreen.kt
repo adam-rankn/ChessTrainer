@@ -1,4 +1,4 @@
-package com.pinguapps.chesstrainer.ui
+package com.pinguapps.chesstrainer.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,8 +9,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.pinguapps.chesstrainer.logic.PassedPawnPuzzleGame
+import com.pinguapps.chesstrainer.ui.ChessboardViewModel
 import com.pinguapps.chesstrainer.ui.composables.Chessboard
-import com.pinguapps.chesstrainer.ui.screens.ChessScreen
 
 
 @Composable

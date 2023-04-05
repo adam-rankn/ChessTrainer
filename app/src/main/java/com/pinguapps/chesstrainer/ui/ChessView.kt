@@ -13,9 +13,7 @@ import android.view.*
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.PopupWindow
 import androidx.core.content.res.ResourcesCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import com.google.android.material.color.MaterialColors
 import com.pinguapps.chesstrainer.R
 import com.pinguapps.chesstrainer.data.GameResult
@@ -38,14 +36,6 @@ class ChessView : View {
     var onMoveMade: (Square,Square) -> Unit = {start, end ->  }
 
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyle: Int, onMoveMade: (Square,Square) -> Unit) : super(
-        context,
-        attrs,
-        defStyle,
-    ) {
-        init()
-        this.onMoveMade = onMoveMade
-    }
     constructor(context: Context?) : super(context) {
         init()
     }
@@ -133,7 +123,7 @@ class ChessView : View {
      * @see drawTargetSquare
      * @see drawSelectedPiece
      */
-    fun drawSquare(col: Int, row: Int, paint: Paint, canvas: Canvas){
+    private fun drawSquare(col: Int, row: Int, paint: Paint, canvas: Canvas){
         val tileSize = width.coerceAtMost(height) / 8
         if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             canvas.drawRect(

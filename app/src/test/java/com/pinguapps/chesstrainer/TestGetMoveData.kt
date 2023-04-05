@@ -5,11 +5,4 @@ import org.junit.Test
 class TestGetMoves {
 
 
-
-
-    @Test
-    fun testGetMoves(){
-
-
-    }
 }

@@ -4,14 +4,14 @@ import com.pinguapps.chesstrainer.data.puzzles.KnightMovePuzzles
 import kotlin.random.Random
 
 class KnightMovePuzzleGenerator(
-    val minDifficulty: Int = 3,
-    val maxDifficulty: Int = 7
+    private val minDifficulty: Int = 3,
+    private val maxDifficulty: Int = 7
 ) {
 
     private val randomGenerator = Random(System.currentTimeMillis())
     val puzzle = pickKnightPuzzle()
 
-    fun pickKnightPuzzle(): Triple<String, List<String>, Int> {
+    private fun pickKnightPuzzle(): Triple<String, List<String>, Int> {
         val puzzleMainList = KnightMovePuzzles()
         val allPuzzles = mutableListOf<Triple<String, List<String>, Int>>()
         if (3 in minDifficulty..maxDifficulty) {

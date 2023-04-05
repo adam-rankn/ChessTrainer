@@ -42,7 +42,7 @@ fun ChessAppBar(
     )
 }
 
-enum class ChessScreen() {
+enum class ChessScreen {
     Menu,
     Chess,
     Knight,

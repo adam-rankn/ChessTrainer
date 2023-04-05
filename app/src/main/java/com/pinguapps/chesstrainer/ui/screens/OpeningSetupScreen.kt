@@ -1,43 +1,30 @@
 package com.pinguapps.chesstrainer.ui.screens
 
 
-import android.widget.Toast
-import android.widget.Toast.LENGTH_SHORT
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pinguapps.chesstrainer.R
 import com.pinguapps.chesstrainer.data.Color
 import com.pinguapps.chesstrainer.data.Opening
-import com.pinguapps.chesstrainer.data.Square
 import com.pinguapps.chesstrainer.data.allOpenings
 import com.pinguapps.chesstrainer.ui.OpeningViewModel
 import com.pinguapps.chesstrainer.ui.composables.AutoCompleteBox
-import com.pinguapps.chesstrainer.ui.composables.ChessControlsBar
 import com.pinguapps.chesstrainer.ui.composables.Chessboard
 import com.pinguapps.chesstrainer.ui.composables.TextSearchBar
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 val openingViewModel = OpeningViewModel()
-@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun OpeningSetupScreen(
     onCancelButtonClicked: () -> Unit,
@@ -85,7 +72,7 @@ fun OpeningSetupScreen(
             }
         }*/
 
-        Row() {
+        Row {
             Image(
                 painter = painterResource(id = R.drawable.w_king),
                 contentDescription = "play as white",

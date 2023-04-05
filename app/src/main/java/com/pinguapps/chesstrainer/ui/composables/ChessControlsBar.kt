@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.pinguapps.chesstrainer.R
-import com.pinguapps.chesstrainer.ui.ChessboardViewModel
 
 @Composable
 fun ChessControlsBar(

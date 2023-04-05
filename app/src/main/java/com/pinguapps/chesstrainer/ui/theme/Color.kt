@@ -1,4 +1,4 @@
-package com.wasterapps.myapplication.ui.theme
+package com.pinguapps.chesstrainer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

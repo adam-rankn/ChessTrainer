@@ -19,8 +19,7 @@ class Move(
     var uciNotation: String = "",
     val longNotation: String = "",
     val castling: Castleing = Castleing.NONE,
-    val enPassantSquare: Square? = null,
-    val promotionPiece: PieceType = PieceType.NONE
+    val enPassantSquare: Square? = null
 ) {
     init {
         uciNotation = generateUciNotation(startSquare = startSquare, endSquare = endSquare)

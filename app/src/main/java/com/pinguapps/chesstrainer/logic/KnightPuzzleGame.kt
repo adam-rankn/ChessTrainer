@@ -7,7 +7,7 @@ import com.pinguapps.chesstrainer.data.Square
 import com.pinguapps.chesstrainer.util.getSquareString
 
 class KnightPuzzleGame(
-    var puzzle: Triple<String, List<String>, Int> = KnightMovePuzzleGenerator().puzzle,
+    private var puzzle: Triple<String, List<String>, Int> = KnightMovePuzzleGenerator().puzzle,
     //todo difficulty slider
 
     ): Chessgame() {

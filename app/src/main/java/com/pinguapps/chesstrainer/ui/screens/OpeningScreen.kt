@@ -1,39 +1,27 @@
 package com.pinguapps.chesstrainer.ui.screens
 
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.*
-import androidx.compose.ui.unit.dp
-import com.pinguapps.chesstrainer.ui.composables.Chessboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.pinguapps.chesstrainer.data.LichessDbMove
 import com.pinguapps.chesstrainer.ui.composables.ChessControlsBar
+import com.pinguapps.chesstrainer.ui.composables.Chessboard
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
 
-
-
-
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun OpeningScreen(
     modifier: Modifier = Modifier,
@@ -87,7 +75,7 @@ fun LinesBox(moves: List<LichessDbMove>){
 @Composable
 fun LineItem(move: LichessDbMove){
 
-    Row(){
+    Row {
         val whitePercent = (move.whiteWinPercent*100).toInt()
         val drawPercent = (move.drawPercent*100).toInt()
         val blackPercent = (move.blackWinPercent*100).toInt()

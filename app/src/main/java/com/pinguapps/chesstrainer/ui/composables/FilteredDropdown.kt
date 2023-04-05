@@ -27,7 +27,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.pinguapps.chesstrainer.data.allOpenings
 
 const val AutoCompleteBoxTag = "AutoCompleteBox"
 
@@ -175,7 +174,7 @@ fun TextSearchBar(
             onValueChanged(query)
         },
         label = { Text(text = label) },
-        //textStyle = MaterialTheme.typography.subtitle1, //todo styling
+        //textStyle =
         singleLine = true,
         trailingIcon = {
             IconButton(onClick = { onClearClick() }) {

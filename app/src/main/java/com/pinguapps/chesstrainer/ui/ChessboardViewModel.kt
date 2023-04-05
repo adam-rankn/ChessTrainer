@@ -2,7 +2,6 @@ package com.pinguapps.chesstrainer.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.pinguapps.chesstrainer.data.Square
 import com.pinguapps.chesstrainer.logic.Chessgame
 
 open class ChessboardViewModel: ViewModel() {

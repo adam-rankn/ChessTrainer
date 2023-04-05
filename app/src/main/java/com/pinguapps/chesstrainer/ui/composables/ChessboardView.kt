@@ -3,9 +3,7 @@ package com.pinguapps.chesstrainer.ui.composables
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
-import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import com.pinguapps.chesstrainer.data.Square
 import com.pinguapps.chesstrainer.logic.Chessgame
 import com.pinguapps.chesstrainer.ui.ChessView

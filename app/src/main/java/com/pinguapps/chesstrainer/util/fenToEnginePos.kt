@@ -3,7 +3,7 @@ package com.pinguapps.chesstrainer.util
 import com.pinguapps.chesstrainer.engine.cuckoo.chess.*
 
 @Throws(ChessParseError::class)
-fun fenToEnginePos(fen: String): Position? {
+fun fenToEnginePos(fen: String): Position {
     val pos = Position()
     val words = fen.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
         .toTypedArray()
@@ -15,8 +15,7 @@ fun fenToEnginePos(fen: String): Position? {
     var row = 7
     var col = 0
     for (i in 0 until words[0].length) {
-        val c = words[0][i]
-        when (c) {
+        when (words[0][i]) {
             '1' -> col += 1
             '2' -> col += 2
             '3' -> col += 3
@@ -80,7 +79,7 @@ fun fenToEnginePos(fen: String): Position? {
             else -> throw ChessParseError("Invalid piece")
         }
     }
-    if (words[1].length == 0) {
+    if (words[1].isEmpty()) {
         throw ChessParseError("Invalid side")
     }
     pos.setWhiteMove(words[1][0] == 'w')
@@ -89,8 +88,7 @@ fun fenToEnginePos(fen: String): Position? {
     var castleMask = 0
     if (words.size > 2) {
         for (i in 0 until words[2].length) {
-            val c = words[2][i]
-            when (c) {
+            when (words[2][i]) {
                 'K' -> castleMask = castleMask or (1 shl Position.H1_CASTLE)
                 'Q' -> castleMask = castleMask or (1 shl Position.A1_CASTLE)
                 'k' -> castleMask = castleMask or (1 shl Position.H8_CASTLE)
@@ -146,7 +144,7 @@ fun fenToEnginePos(fen: String): Position? {
     val pos2 = Position(pos)
     pos2.setWhiteMove(!pos.whiteMove)
     if (MoveGen.inCheck(pos2)) {
-        //todo throw ChessParseError("King capture possible")
+        throw ChessParseError("King capture possible")
     }
     TextIO.fixupEPSquare(pos)
     return pos

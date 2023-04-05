@@ -18,8 +18,6 @@
 
 package com.pinguapps.chesstrainer.engine.cuckoo.chess;
 
-import java.util.Comparator;
-
 public class Move {
     /** From square, 0-63. */
     public int from;
@@ -46,13 +44,7 @@ public class Move {
         this.promoteTo = promoteTo;
         this.score = score;
     }
-    
-    static public class SortByScore implements Comparator<Move> {
-        public int compare(Move sm1, Move sm2) {
-            return sm2.score - sm1.score;
-        }
-    }
-    
+
     public Move(Move m) {
         this.from = m.from;
         this.to = m.to;
@@ -91,9 +83,7 @@ public class Move {
             return false;
         if (to != other.to)
             return false;
-        if (promoteTo != other.promoteTo)
-            return false;
-        return true;
+        return promoteTo == other.promoteTo;
     }
     @Override
     public int hashCode() {

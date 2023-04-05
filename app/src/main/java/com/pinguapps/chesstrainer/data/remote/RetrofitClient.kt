@@ -7,12 +7,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    private const val TIME_OUT: Long = 120
     private const val BASE_URL = "https://explorer.lichess.ovh/"
 
     private val gson = GsonBuilder().setLenient().create()
 
-    val okHttpClient = OkHttpClient()
+    private val okHttpClient: OkHttpClient = OkHttpClient()
         .newBuilder()
         .addInterceptor(RequestInterceptor)
         .build()

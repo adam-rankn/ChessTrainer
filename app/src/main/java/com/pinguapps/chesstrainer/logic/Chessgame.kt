@@ -5,10 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.pinguapps.chesstrainer.data.*
 import com.pinguapps.chesstrainer.logic.bots.BasicBot
 import com.pinguapps.chesstrainer.logic.bots.Bot
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import java.util.*
-import java.util.concurrent.Flow
 
 
 open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
@@ -39,7 +36,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     val playerIsBlack: MutableLiveData<Boolean> = MutableLiveData(false)
     var cpuColor = Color.BLACK
     val toMove: Color get() = chessboard.turn
-    val moveHistory: Stack<String> = Stack()
+    private val moveHistory: Stack<String> = Stack()
     private val futureMoves: Stack<String> = Stack()
     val gameResult = MutableLiveData(GameResult.GAME_IN_PROGRESS)
     var hintsRemaining = 0
@@ -108,7 +105,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         return fen
     }
 
-    fun getPositionString(): String {
+    private fun getPositionString(): String {
         return chessboard.getPartialFenStringFromPosition()
     }
 
@@ -128,9 +125,10 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     }
 
     fun makeMove(uci: String){
-        //todo promortion
+        //todo test
         val start = uci.slice(IntRange(0,1))
         val end = uci.slice(IntRange(2,3))
+
 
         val promotion: PieceType = if (uci.length == 5){
             when (uci[4]) {
@@ -140,12 +138,12 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
                 'b' -> PieceType.BISHOP
                 else -> PieceType.NONE
             }
-            //todo promo
         } else {
             PieceType.NONE
         }
         val startSquare = chessboard.getSquare(start)
         val endSquare = chessboard.getSquare(end)
+        val color = startSquare.pieceColor
 
         val castling = when (uci) {
             "e1h1" -> Castleing.WHITE_KING
@@ -156,13 +154,20 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         }
 
         val move = Move(
-            startSquare = startSquare,
             endSquare = endSquare,
+            startSquare = startSquare,
             pieceType = startSquare.pieceType,
             capturedPiece = endSquare.pieceType,
             castling = castling
             )
         doMove(move)
+        if (promotion != PieceType.NONE){
+            chessboard.promotePawn(
+                color = color,
+                pieceType = promotion,
+                square = endSquare
+            )
+        }
     }
 
     private fun doMove(move: Move){
@@ -198,7 +203,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         if (chessboard.turn == Color.BLACK){
             moveCounter ++
         }
-        chessboard.makeMove(moveStr)
+        makeMove(moveStr)
         updateCountersAndCheckForDraw()
 
         //pawn promotion
