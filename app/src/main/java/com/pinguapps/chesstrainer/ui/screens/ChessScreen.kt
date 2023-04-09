@@ -71,7 +71,7 @@ fun ChessApp(modifier: Modifier = Modifier,
                 currentScreen = currentScreen,
                 canNavigateBack = navController.previousBackStackEntry != null,
                 navigateUp = { navController.navigateUp() },
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 0.dp)
             )
         }
     ) { innerPadding ->

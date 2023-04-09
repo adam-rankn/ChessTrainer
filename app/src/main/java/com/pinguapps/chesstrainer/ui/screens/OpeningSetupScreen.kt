@@ -1,16 +1,25 @@
 package com.pinguapps.chesstrainer.ui.screens
 
 
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.pinguapps.chesstrainer.R
@@ -41,21 +50,19 @@ fun OpeningSetupScreen(
     ) {
 
         AutoCompleteOpeningBox(openings = allOpenings)
-        Chessboard(
-            openingViewModel.chessgame
-        )
+        Chessboard(openingViewModel.chessgame)
         var text by remember { mutableStateOf(TextFieldValue("")) }
 
         val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
-/*        Row() {
+       Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = text,
                 onValueChange = {
                     text = it
                 },
                 label = { Text(text = "Load from FEN")},
-                modifier = Modifier.fillMaxWidth(0.8f)
+                modifier = Modifier.weight(1f)
 
             )
             Button(onClick = {
@@ -67,39 +74,40 @@ fun OpeningSetupScreen(
                     Toast.makeText(context,"failed to load position", LENGTH_SHORT).show()
                 }
             },
-            modifier = Modifier.weight(0.15f)) {
-                Text(text = "Load")
-            }
-        }*/
-
-        Row {
-            Image(
-                painter = painterResource(id = R.drawable.w_king),
-                contentDescription = "play as white",
-                modifier = Modifier.size(80.dp).clickable {
-                    openingViewModel.onPlayerColorClicked(Color.WHITE)
-                }
-            )
-
-            Image(
-                painter = painterResource(id = R.drawable.b_king),
-                contentDescription = "play as black",
-                modifier = Modifier.size(80.dp).clickable {
-                    openingViewModel.onPlayerColorClicked(Color.BLACK)
-                }
-            )
-            Button(onClick = { openingViewModel.resetGame() }) {
-                Text(text = "Reset Board")
+            modifier = Modifier.padding(8.dp),
+            contentPadding = PaddingValues(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.back_button)
+                )
             }
         }
 
-
-
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
+            Image(
+                painter = painterResource(id = R.drawable.w_king),
+                contentDescription = "play as white",
+                modifier = Modifier.size(60.dp).clickable {
+                    openingViewModel.onPlayerColorClicked(Color.WHITE)
+                }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.b_king),
+                contentDescription = "play as black",
+                modifier = Modifier.size(60.dp).clickable {
+                    openingViewModel.onPlayerColorClicked(Color.BLACK)
+                }
+            )
+            Button(modifier = Modifier.padding(16.dp),
+                onClick = openingViewModel::resetGame) {
+                Text(text = "Reset Board")
+            }
+        }
         Button(onClick = {
             onStartClicked()
             coroutineScope.launch {
-            //make sure human is first to move
-                openingViewModel.makeCpuMove()
+                openingViewModel.startTraining()
             }
         }, modifier = Modifier.fillMaxWidth().height(80.dp)
         ) {
@@ -154,7 +162,6 @@ fun AutoCompleteOpeningBox(openings: List<Opening>) {
             label = "Search Openings",
             onDoneActionClick = {
                 view.clearFocus()
-
             },
             onClearClick = {
                 value = ""

@@ -9,7 +9,7 @@ import com.pinguapps.chesstrainer.logic.Chessgame
 import com.pinguapps.chesstrainer.ui.ChessView
 
 @Composable
-fun Chessboard(game: Chessgame, onMoveMade: (Square,Square) -> Unit = {_,_ ->}) {
+fun Chessboard(game: Chessgame, onMoveMade: (Square,Square) -> Unit = {start,end ->}) {
     AndroidView(factory = { context ->
         ChessView(context).apply {
             this.game = game

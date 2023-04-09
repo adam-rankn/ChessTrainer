@@ -40,7 +40,7 @@ fun ChessControlsBar(
                 contentDescription = "Undo last move",
             )
         }
-        Button(onClick = { onHintPressed },
+        Button(onClick = { onHintPressed() },
             modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
             Icon(

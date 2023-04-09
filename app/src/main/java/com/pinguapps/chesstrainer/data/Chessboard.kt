@@ -1461,12 +1461,14 @@ class Chessboard {
             Castleing.BLACK_KING -> {
                 board[7][0].piece = Piece(Color.NONE,PieceType.NONE)
                 board[5][0].piece = Piece(Color.BLACK,PieceType.ROOK)
+                board[6][0].piece = Piece(Color.BLACK,PieceType.KING)
                 blackCastleKingRights = false
                 blackCastleQueenRights = false
             }
             Castleing.BLACK_QUEEN -> {
                 board[0][0].piece = Piece(Color.NONE,PieceType.NONE)
                 board[3][0].piece = Piece(Color.BLACK,PieceType.ROOK)
+                board[2][0].piece = Piece(Color.BLACK,PieceType.KING)
                 blackCastleKingRights = false
                 blackCastleQueenRights = false
 
@@ -1474,12 +1476,14 @@ class Chessboard {
             Castleing.WHITE_KING -> {
                 board[7][7].piece = Piece(Color.NONE,PieceType.NONE)
                 board[5][7].piece = Piece(Color.WHITE,PieceType.ROOK)
+                board[6][7].piece = Piece(Color.WHITE,PieceType.KING)
                 whiteCastleKingRights = false
                 whiteCastleQueenRights = false
             }
             Castleing.WHITE_QUEEN -> {
                 board[0][7].piece = Piece(Color.NONE,PieceType.NONE)
                 board[3][7].piece = Piece(Color.WHITE,PieceType.ROOK)
+                board[2][7].piece = Piece(Color.WHITE,PieceType.KING)
                 whiteCastleKingRights = false
                 whiteCastleQueenRights = false
 

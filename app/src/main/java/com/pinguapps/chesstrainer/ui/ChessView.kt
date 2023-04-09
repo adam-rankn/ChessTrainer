@@ -22,6 +22,9 @@ import com.pinguapps.chesstrainer.data.Square
 import com.pinguapps.chesstrainer.databinding.PopupGameOverBinding
 import com.pinguapps.chesstrainer.databinding.PopupPawnPromotionBinding
 import com.pinguapps.chesstrainer.logic.Chessgame
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.floor
 
@@ -59,6 +62,8 @@ class ChessView : View {
         BLACK_PAINT.color = MaterialColors.getColor(this, R.attr.boardDarkSquare)
         HIGHLIGHT_PAINT.color = MaterialColors.getColor(this, R.attr.colorHighlightPiece)
         TARGET_PAINT.color = MaterialColors.getColor(this, R.attr.boardTargetSquare)
+        LASTMOVE_PAINT.color = MaterialColors.getColor(this, R.attr.boardMoveSquares)
+        //todo
 
 
     }
@@ -101,6 +106,7 @@ class ChessView : View {
         drawSelectedPiece(canvas)
         drawCheckHighlight(canvas)
         drawTargetSquare(canvas)
+        drawLastMove(canvas)
         drawPieces(canvas)
         drawValidMoves(canvas)
     }
@@ -210,11 +216,46 @@ class ChessView : View {
      */
     private fun drawSelectedPiece(canvas: Canvas){
         if (board.selectedSquare != null) {
-            val (col,row) = getCoordinatesFromSquare(board.selectedSquare!!)
+            val rawCoords = getCoordinatesFromSquare(board.selectedSquare!!)
+            val (col,row) =  if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+                rawCoords
+            }
+            else {
+                Pair(abs(rawCoords.first-7), abs(rawCoords.second-7))
+            }
+
+            //val (col,row) = getCoordinatesFromSquare(board.selectedSquare!!)
             val paint: Paint = HIGHLIGHT_PAINT
             drawSquare(col, row, paint, canvas)
         }
 
+    }
+
+    /**
+     * highlights the start and end square of the last played move
+     */
+    private fun drawLastMove(canvas: Canvas){
+        if (game.lastMoves.isNotEmpty()) {
+            val rawCoordsStart = getCoordinatesFromSquare(game.lastMoves.peek().startSquare)
+            val rawCoordsEnd = getCoordinatesFromSquare(game.lastMoves.peek().endSquare)
+            val (col,row) =  if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+                rawCoordsStart
+            }
+            else {
+                Pair(abs(rawCoordsStart.first-7), abs(rawCoordsStart.second-7))
+            }
+            val (col2,row2) =  if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+                rawCoordsEnd
+            }
+            else {
+                Pair(abs(rawCoordsEnd.first-7), abs(rawCoordsEnd.second-7))
+            }
+
+            //val (col,row) = getCoordinatesFromSquare(board.selectedSquare!!)
+            val paint: Paint = LASTMOVE_PAINT
+            drawSquare(col, row, paint, canvas)
+            drawSquare(col2, row2, paint, canvas)
+        }
     }
 
     /**
@@ -329,10 +370,11 @@ class ChessView : View {
             col = square.col
             row = square.row
         }
-        else {
+       else {
             col = abs(square.col - 7)
             row = abs(square.row - 7)
         }
+
         return Pair(col,row)
     }
 
@@ -348,24 +390,30 @@ class ChessView : View {
         if (game.gameResult.value != GameResult.GAME_IN_PROGRESS){
             return
         }
-        val highlightedSquare = board.selectedSquare
-        val clickedSquare = board.board[col][row]
-        if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
-            game.makeHumanMove(clickedSquare)
-            onMoveMade(highlightedSquare,clickedSquare)
-            invalidate()
 
-        } else {
-            if (clickedSquare.pieceType != PieceType.NONE && board.turn == clickedSquare.pieceColor) {
-                //todo add check for player color
-                board.validMoves = board.generatePieceMoves(clickedSquare)
-                board.selectedSquare = clickedSquare
+        CoroutineScope(Dispatchers.Default).launch {
+            val highlightedSquare = board.selectedSquare
+            val clickedSquare = board.board[col][row]
+            if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
+                Log.d("chessview", "onmovemade called")
+                game.makeHumanMove(clickedSquare)
+                onMoveMade(highlightedSquare,clickedSquare)
+
                 invalidate()
+
             } else {
-                board.selectedSquare = null
-                board.validMoves = mutableListOf()
+                if (clickedSquare.pieceType != PieceType.NONE && board.turn == clickedSquare.pieceColor) {
+                    //todo add check for player color
+                    board.validMoves = board.generatePieceMoves(clickedSquare)
+                    board.selectedSquare = clickedSquare
+                    invalidate()
+                } else {
+                    board.selectedSquare = null
+                    board.validMoves = mutableListOf()
+                }
             }
         }
+
     }
 
 
@@ -582,9 +630,6 @@ class ChessView : View {
                     }
                     else -> {}
                 }
-                popupBind.btnMenu.setOnClickListener {
-                    //todo go to menu
-                }
                 popupBind.btnRematch.setOnClickListener {
                     board.clearBoard()
                     game.newGame()
@@ -625,6 +670,7 @@ class ChessView : View {
         private val BLACK_PAINT: Paint = Paint()
         private val HIGHLIGHT_PAINT: Paint = Paint()
         private val TARGET_PAINT: Paint = Paint()
+        private val LASTMOVE_PAINT: Paint = Paint()
     }
 
 }

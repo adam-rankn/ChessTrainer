@@ -36,15 +36,18 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     val playerIsBlack: MutableLiveData<Boolean> = MutableLiveData(false)
     var cpuColor = Color.BLACK
     val toMove: Color get() = chessboard.turn
-    private val moveHistory: Stack<String> = Stack()
-    private val futureMoves: Stack<String> = Stack()
+    private val positionHistory: Stack<String> = Stack()
+    private val futurePositions: Stack<String> = Stack()
     val gameResult = MutableLiveData(GameResult.GAME_IN_PROGRESS)
     var hintsRemaining = 0
     var fiftyMoveCounter = 0
     var moveCounter = 1
-    private val positionMap = mutableMapOf<String,Int>()
+    val positionMap = mutableMapOf<String,Int>()
     var targetSquare: Square? = null
     val lastPosition: MutableLiveData<String> = MutableLiveData("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    val lastMoves: Stack<Move> = Stack()
+    val futureMoves: Stack<Move> = Stack()
+
 
 
 
@@ -60,13 +63,14 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     open fun newGame(){
         chessboard.clearBoard()
         chessboard.resetBoard()
-        moveHistory.clear()
-        futureMoves.clear()
+        positionHistory.clear()
+        futurePositions.clear()
         fiftyMoveCounter = 0
         moveCounter = 1
         positionMap.clear()
         gameResult.postValue(GameResult.GAME_IN_PROGRESS)
         lastPosition.value = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        lastMoves.clear()
     }
 
     /**
@@ -90,6 +94,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         chessboard.loadPositionFenString(fenString)
         fiftyMoveCounter = halfMoveString.toInt()
         moveCounter = fullMoveString.toInt()
+
     }
 
 
@@ -105,14 +110,9 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         return fen
     }
 
-    private fun getPositionString(): String {
-        return chessboard.getPartialFenStringFromPosition()
-    }
 
     /**
-     * sends the move to the chessboard and adds move to the move stack to facilitate undo move
-     * empties future move history if move is played with moves on the future stack
-     * updates game values and performs game result checks
+     * makes a move from user input
      *
      */
     open fun makeHumanMove(square: Square){
@@ -124,11 +124,15 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         }
     }
 
+    /**
+     * takes a UCI string and generates a move object, then makes the move
+     * @param uci the move in UCI format
+     */
     fun makeMove(uci: String){
         //todo test
+        //todo en peasant
         val start = uci.slice(IntRange(0,1))
         val end = uci.slice(IntRange(2,3))
-
 
         val promotion: PieceType = if (uci.length == 5){
             when (uci[4]) {
@@ -146,10 +150,10 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         val color = startSquare.pieceColor
 
         val castling = when (uci) {
-            "e1h1" -> Castleing.WHITE_KING
-            "e1a1" -> Castleing.WHITE_QUEEN
-            "e8h8" -> Castleing.BLACK_KING
-            "e8a8" -> Castleing.BLACK_QUEEN
+            "e1g1c" -> Castleing.WHITE_KING
+            "e1c1c" -> Castleing.WHITE_QUEEN
+            "e8g8c" -> Castleing.BLACK_KING
+            "e8c8c" -> Castleing.BLACK_QUEEN
             else -> Castleing.NONE
         }
 
@@ -170,14 +174,17 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         }
     }
 
+    /**
+     * moves a piece
+     */
     private fun doMove(move: Move){
-        moveHistory.push(generateFenStringFromPosition())
+        positionHistory.push(generateFenStringFromPosition())
         if (chessboard.turn == Color.BLACK){
             moveCounter ++
         }
         chessboard.selectedSquare = move.startSquare // needed in case of speech to text
         chessboard.makeMove(move)
-        futureMoves.clear()
+        futurePositions.clear()
         updateFiftyMoveCounter(move)
         updateCountersAndCheckForDraw()
 
@@ -191,15 +198,19 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
             }
         }
         lastPosition.postValue(generateFenStringFromPosition())
+        lastMoves.add(move)
     }
 
+    /**
+     *  sets the promotion square so that user can choose piece to promote to
+     */
     open fun setPawnPromoted(square: Square){
         chessboard.promotionSquare.postValue(square)
     }
 
     open fun makeComputerMove(){
         val moveStr = computer.getMove(generateFenStringFromPosition())
-        moveHistory.push(generateFenStringFromPosition())
+        positionHistory.push(generateFenStringFromPosition())
         if (chessboard.turn == Color.BLACK){
             moveCounter ++
         }
@@ -212,6 +223,9 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         }
     }
 
+    /**
+     * immediately promotes a pawn on square to specified piece
+     */
     open fun promotePawn(square: Square, pieceType: PieceType, color: Color){
         chessboard.promotePawn(square,pieceType,color)
         //makeComputerMove()
@@ -221,8 +235,8 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * removes the move counter data from the string for use in threefold checking
      * @see checkThreefoldRepetition
      */
-    private fun stripMoveDataFromFen(fenString: String): String {
-        return fenString.split(" ").take(4).joinToString { " " }
+     fun stripMoveDataFromFen(fenString: String): String {
+        return fenString.split(" ").take(4).toString()
     }
 
     /**
@@ -230,17 +244,20 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * @see checkThreefoldRepetition
      * @see stripMoveDataFromFen
      */
-    private fun addPosToThreefoldMap(string: String = getPositionString()){
-        positionMap[string] = (positionMap[string] ?:0) +1
+    private fun addPosToThreefoldMap(string: String = generateFenStringFromPosition()){
+        val pos = stripMoveDataFromFen(string)
+        positionMap[pos] = (positionMap[pos] ?:0) +1
     }
 
     /**
      * removes the given position from threefold map
      * @see checkThreefoldRepetition
      * @see stripMoveDataFromFen
+     * @see undoMove
      */
-    private fun removePosFromThreefoldMap(string: String = getPositionString()){
-        positionMap[string] = (positionMap[string] ?:1) -1
+    private fun removePosFromThreefoldMap(string: String = generateFenStringFromPosition()){
+        val pos = stripMoveDataFromFen(string)
+        positionMap[pos] = (positionMap[pos] ?:1) -1
     }
 
     /**
@@ -250,16 +267,17 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      *
      */
     fun undoMove() {
-        if (moveHistory.isEmpty()){
+        if (positionHistory.isEmpty()){
             return
         }
-        if (moveHistory.isNotEmpty()) {
+        if (positionHistory.isNotEmpty()) {
             val currentBoardPosition = generateFenStringFromPosition()
-            futureMoves.push(currentBoardPosition)
+            futurePositions.push(currentBoardPosition)
             removePosFromThreefoldMap()
-            val lastMoveFenString = moveHistory.pop()
+            val lastMoveFenString = positionHistory.pop()
             loadPositionFenString(lastMoveFenString)
             lastPosition.value = lastMoveFenString
+            futureMoves.push(lastMoves.pop())
         }
     }
 
@@ -270,15 +288,16 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      *
      */
     fun redoMove() {
-        if (futureMoves.isEmpty()){
+        if (futurePositions.isEmpty()){
             return
         }
-        if (futureMoves.isNotEmpty()) {
+        if (futurePositions.isNotEmpty()) {
             val currentBoardPosition = generateFenStringFromPosition()
-            moveHistory.push(currentBoardPosition)
-            lastPosition.value = futureMoves.peek()
-            loadPositionFenString(futureMoves.pop())
+            positionHistory.push(currentBoardPosition)
+            lastPosition.value = futurePositions.peek()
+            loadPositionFenString(futurePositions.pop())
             addPosToThreefoldMap()
+            lastMoves.push(futureMoves.pop())
 
         }
     }
@@ -290,23 +309,20 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      *
      */
     fun undoAllMoves(){
-        if (moveHistory.isEmpty()){
+        if (positionHistory.isEmpty()){
             return
         }
-        Log.d("undoall","pushing current position")
-        moveHistory.push(generateFenStringFromPosition())
-        while (moveHistory.size > 1){
-            val position = stripMoveDataFromFen(moveHistory.peek())
+        positionHistory.push(generateFenStringFromPosition())
+        while (positionHistory.size > 1){
+            val position = stripMoveDataFromFen(positionHistory.peek())
             removePosFromThreefoldMap(position)
-            futureMoves.push(moveHistory.pop())
+            futurePositions.push(positionHistory.pop())
+            futureMoves.push(lastMoves.pop())
         }
-        loadPositionFenString(moveHistory.peek())
-        lastPosition.value = moveHistory.peek()
+        loadPositionFenString(positionHistory.peek())
+        lastPosition.value = positionHistory.peek()
         removePosFromThreefoldMap()
-        moveHistory.pop()
-
-
-
+        positionHistory.pop()
     }
 
     /**
@@ -316,19 +332,22 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      *
      */
     fun redoAllMoves(){
-        if (futureMoves.isEmpty()){
+        if (futurePositions.isEmpty()){
             return
         }
-        moveHistory.push(generateFenStringFromPosition())
+        positionHistory.push(generateFenStringFromPosition())
         addPosToThreefoldMap()
-        while (futureMoves.size > 1){
-            val position = stripMoveDataFromFen(futureMoves.peek())
+        while (futurePositions.size > 1){
+            val position = stripMoveDataFromFen(futurePositions.peek())
             addPosToThreefoldMap(position)
-            moveHistory.push(futureMoves.pop())
+            positionHistory.push(futurePositions.pop())
+            lastMoves.push(futureMoves.pop())
         }
-        lastPosition.value = futureMoves.peek()
-        loadPositionFenString(futureMoves.pop())
+        lastMoves.push(futureMoves.pop())
+        lastPosition.value = futurePositions.peek()
+        loadPositionFenString(futurePositions.pop())
         addPosToThreefoldMap()
+        //TODO test last moves and other functionality
 
     }
 
@@ -343,6 +362,14 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         else if (playerColor == Color.WHITE){
             gameResult.postValue(GameResult.BLACK_WIN_RESIGNATION)
         }
+    }
+
+    fun isPlayerTurn(): Boolean {
+        return toMove == playerColor
+    }
+
+    fun isCpuTurn(): Boolean {
+        return toMove == cpuColor
     }
 
     /**

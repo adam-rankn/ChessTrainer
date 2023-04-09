@@ -1,5 +1,7 @@
 package com.pinguapps.chesstrainer.util
 
+import android.util.Log
+import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
 
 fun generateUciNotation(startSquare: Square, endSquare: Square): String {

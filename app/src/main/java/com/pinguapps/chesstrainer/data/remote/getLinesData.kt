@@ -2,6 +2,7 @@ package com.pinguapps.chesstrainer.data.remote
 
 import android.util.Log
 import com.pinguapps.chesstrainer.data.LichessDbMove
+import com.pinguapps.chesstrainer.data.PieceType
 
 fun getLinesData(data: LichessOpeningData): List<LichessDbMove> {
     val movesList = data.moves
@@ -20,8 +21,25 @@ fun getLinesData(data: LichessOpeningData): List<LichessDbMove> {
                 val drawPercent: Float = draws/games.toFloat()
                 val playedPercent = games/totalGames.toFloat()
 
+                //change weird lichess castling notation to standard uci
+                val uci: String =
+                    if (move.san == "O-O"|| move.san == "O-O-O") {
+                        when (move.uci) {
+                            "e1h1" -> "e1g1"
+                            "e1a1" -> "e1c1"
+                            "e8h8" -> "e8g8"
+                            "e8a8" -> "e8c8"
+                            else -> {
+                                move.uci!!
+                            }
+                        }
+                    }
+                else {
+                    move.uci!!
+                    }
+
                 val lichessMove = LichessDbMove(
-                    uci = move.uci!!,
+                    uci = uci,
                     whiteWinPercent = whiteWinPercent,
                     blackWinPercent = blackWinPercent,
                     drawPercent = drawPercent,

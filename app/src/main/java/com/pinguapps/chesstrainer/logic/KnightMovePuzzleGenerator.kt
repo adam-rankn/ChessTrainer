@@ -4,7 +4,7 @@ import com.pinguapps.chesstrainer.data.puzzles.KnightMovePuzzles
 import kotlin.random.Random
 
 class KnightMovePuzzleGenerator(
-    private val minDifficulty: Int = 3,
+    private val minDifficulty: Int = 5,
     private val maxDifficulty: Int = 7
 ) {
 
