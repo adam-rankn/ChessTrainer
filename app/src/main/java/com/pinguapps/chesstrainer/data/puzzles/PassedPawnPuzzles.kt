@@ -3,7 +3,6 @@ package com.pinguapps.chesstrainer.data.puzzles
 class PassedPawnPuzzles {
 
     val whiteSquarePositionsList = listOf(
-        "k7/4pp2/3p2p1/3P2P1/4PP2/8/8/K7 w - - 0 1",
         "k7/ppp1p3/5pp1/6P1/5P2/8/PPP5/K7 w - - 0 1",
         "k7/p1p1p3/1p3pp1/6P1/P4P2/1P6/2P5/K7 w - - 0 1",
         "7k/2p2ppp/pp6/P7/1P6/8/6PP/7K w - - 0 1",
@@ -40,15 +39,22 @@ class PassedPawnPuzzles {
         "8/5pk1/4p3/4P1PK/6P1/8/8/8 w - - 0 1"
     )
 
-    val otherPuzzles = listOf(
+    val spacerPuzzles = listOf(
         "8/4pp2/8/3P1P1k/8/7K/8/8 w - - 0 1",
-        "k7/4pp2/5p2/3P1P2/6P1/8/8/K7 w - - 0 1"
+        "8/1pp5/8/1P1P3k/8/7K/8/8 w - - 0 1",
+        "7k/pp4pp/8/P1P5/8/8/6PP/7K w - - 0 1"
+    )
+
+
+    val otherPuzzles = listOf(
+        "k7/5pp1/6p1/4P1P1/7P/8/8/K7 w - - 0 1"
     )
 
     val allPuzzles: List<String> get() = listOf(
         whiteUndoublerList,
         whiteHatPositionsList,
         whiteSquigglyPositionsList,
-        whiteSquarePositionsList).flatten()
+        whiteSquarePositionsList,
+        otherPuzzles).flatten()
 
 }

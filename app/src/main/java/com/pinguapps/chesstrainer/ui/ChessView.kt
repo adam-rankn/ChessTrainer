@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.media.MediaPlayer
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -16,6 +17,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.google.android.material.color.MaterialColors
 import com.pinguapps.chesstrainer.R
+import com.pinguapps.chesstrainer.data.Color
 import com.pinguapps.chesstrainer.data.GameResult
 import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
@@ -35,13 +37,17 @@ class ChessView : View {
             field = value
         }
     var board = game.chessboard
-    //private var playerColor = game.playerColor
-    var onMoveMade: (Square,Square) -> Unit = {start, end ->  }
 
+    //private var playerColor = game.playerColor
+    var onMoveMade: (Square, Square) -> Unit = { start, end -> }
+
+    val movePlayer = MediaPlayer.create(context, R.raw.move)
+    var capturePlayer = MediaPlayer.create(context, R.raw.capture)
 
     constructor(context: Context?) : super(context) {
         init()
     }
+
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
         init()
     }
@@ -55,17 +61,12 @@ class ChessView : View {
     }
 
 
-
-
     private fun init() {
         WHITE_PAINT.color = MaterialColors.getColor(this, R.attr.boardLightSquare)
         BLACK_PAINT.color = MaterialColors.getColor(this, R.attr.boardDarkSquare)
         HIGHLIGHT_PAINT.color = MaterialColors.getColor(this, R.attr.colorHighlightPiece)
         TARGET_PAINT.color = MaterialColors.getColor(this, R.attr.boardTargetSquare)
         LASTMOVE_PAINT.color = MaterialColors.getColor(this, R.attr.boardMoveSquares)
-        //todo
-
-
     }
 
 
@@ -93,10 +94,9 @@ class ChessView : View {
 
         val widthPixels = MeasureSpec.getSize(widthMeasureSpec)
         val heightPixels = MeasureSpec.getSize(heightMeasureSpec)
-        if (widthPixels > heightPixels){
+        if (widthPixels > heightPixels) {
             super.onMeasure(heightMeasureSpec, heightMeasureSpec)
-        }
-        else {
+        } else {
             super.onMeasure(widthMeasureSpec, widthMeasureSpec)
         }
     }
@@ -116,10 +116,10 @@ class ChessView : View {
      * @see drawSquare
      */
     private fun drawBoard(canvas: Canvas) {
-            for (col in 0..7) for (row in 0..7) {
-                val paint: Paint = if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
-                drawSquare(col,row,paint,canvas)
-            }
+        for (col in 0..7) for (row in 0..7) {
+            val paint: Paint = if ((col + row) % 2 == 0) WHITE_PAINT else BLACK_PAINT
+            drawSquare(col, row, paint, canvas)
+        }
     }
 
     /**
@@ -129,7 +129,7 @@ class ChessView : View {
      * @see drawTargetSquare
      * @see drawSelectedPiece
      */
-    private fun drawSquare(col: Int, row: Int, paint: Paint, canvas: Canvas){
+    private fun drawSquare(col: Int, row: Int, paint: Paint, canvas: Canvas) {
         val tileSize = width.coerceAtMost(height) / 8
         if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             canvas.drawRect(
@@ -139,18 +139,16 @@ class ChessView : View {
                 ((row + 1) * tileSize).toFloat(),
                 paint
             )
-        }
-        else {
+        } else {
             canvas.drawRect(
-                (abs(col-7) * tileSize).toFloat(),
-                (abs(row-7) * tileSize).toFloat(),
-                ((abs(col-7) + 1) * tileSize).toFloat(),
-                ((abs(row-7) + 1) * tileSize).toFloat(),
+                (abs(col - 7) * tileSize).toFloat(),
+                (abs(row - 7) * tileSize).toFloat(),
+                ((abs(col - 7) + 1) * tileSize).toFloat(),
+                ((abs(row - 7) + 1) * tileSize).toFloat(),
                 paint
             )
         }
     }
-
 
 
     /**
@@ -179,8 +177,7 @@ class ChessView : View {
                 PieceType.KING -> drawPicture(canvas, square, R.drawable.w_king)
                 else -> {}
             }
-        }
-        else if (square.pieceColor == com.pinguapps.chesstrainer.data.Color.BLACK) {
+        } else if (square.pieceColor == com.pinguapps.chesstrainer.data.Color.BLACK) {
             when (square.pieceType) {
                 PieceType.PAWN -> drawPicture(canvas, square, R.drawable.b_pawn)
                 PieceType.KNIGHT -> drawPicture(canvas, square, R.drawable.b_knight)
@@ -196,13 +193,12 @@ class ChessView : View {
     /**
      * Highlights a king which is in check
      */
-    private fun drawCheckHighlight(canvas: Canvas){
+    private fun drawCheckHighlight(canvas: Canvas) {
 
-        if (board.whiteInCheck){
+        if (board.whiteInCheck) {
             val square = board.whiteKingSquare
             drawPicture(canvas, square, R.drawable.ring)
-        }
-        else if (board.blackInCheck){
+        } else if (board.blackInCheck) {
             val square = board.blackKingSquare
             drawPicture(canvas, square, R.drawable.ring)
 //todo make this look not bad
@@ -214,14 +210,13 @@ class ChessView : View {
      * Highlights the square which contains currently selected piece
      * @see drawSquare
      */
-    private fun drawSelectedPiece(canvas: Canvas){
+    private fun drawSelectedPiece(canvas: Canvas) {
         if (board.selectedSquare != null) {
             val rawCoords = getCoordinatesFromSquare(board.selectedSquare!!)
-            val (col,row) =  if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+            val (col, row) = if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
                 rawCoords
-            }
-            else {
-                Pair(abs(rawCoords.first-7), abs(rawCoords.second-7))
+            } else {
+                Pair(abs(rawCoords.first - 7), abs(rawCoords.second - 7))
             }
 
             //val (col,row) = getCoordinatesFromSquare(board.selectedSquare!!)
@@ -234,21 +229,19 @@ class ChessView : View {
     /**
      * highlights the start and end square of the last played move
      */
-    private fun drawLastMove(canvas: Canvas){
+    private fun drawLastMove(canvas: Canvas) {
         if (game.lastMoves.isNotEmpty()) {
             val rawCoordsStart = getCoordinatesFromSquare(game.lastMoves.peek().startSquare)
             val rawCoordsEnd = getCoordinatesFromSquare(game.lastMoves.peek().endSquare)
-            val (col,row) =  if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+            val (col, row) = if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
                 rawCoordsStart
+            } else {
+                Pair(abs(rawCoordsStart.first - 7), abs(rawCoordsStart.second - 7))
             }
-            else {
-                Pair(abs(rawCoordsStart.first-7), abs(rawCoordsStart.second-7))
-            }
-            val (col2,row2) =  if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
+            val (col2, row2) = if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
                 rawCoordsEnd
-            }
-            else {
-                Pair(abs(rawCoordsEnd.first-7), abs(rawCoordsEnd.second-7))
+            } else {
+                Pair(abs(rawCoordsEnd.first - 7), abs(rawCoordsEnd.second - 7))
             }
 
             //val (col,row) = getCoordinatesFromSquare(board.selectedSquare!!)
@@ -262,11 +255,11 @@ class ChessView : View {
      * Highlights the square which is the current puzzle target, if exists
      * @see drawSquare
      */
-    private fun drawTargetSquare(canvas: Canvas){
-        if (game.targetSquare!= null){
-            val (col, row ) = getCoordinatesFromSquare(game.targetSquare!!)
+    private fun drawTargetSquare(canvas: Canvas) {
+        if (game.targetSquare != null) {
+            val (col, row) = getCoordinatesFromSquare(game.targetSquare!!)
             val paint: Paint = TARGET_PAINT
-            drawSquare(col,row,paint,canvas)
+            drawSquare(col, row, paint, canvas)
         }
     }
 
@@ -285,10 +278,9 @@ class ChessView : View {
                 Rect(x * tileSize, y * tileSize, (x + 1) * tileSize, (y + 1) * tileSize),
                 null
             )
-        }
-        else {
+        } else {
             val tileSize = height.coerceAtMost(width) / 8
-            val x: Int = abs(7 -square.col)
+            val x: Int = abs(7 - square.col)
             val y: Int = abs(7 - square.row)
             val drawable: Drawable? = ResourcesCompat.getDrawable(resources, picture, null)
             val bitmapDrawable = (drawable as BitmapDrawable).bitmap
@@ -310,19 +302,19 @@ class ChessView : View {
             MotionEvent.ACTION_UP -> {
                 val x: Float = event.x
                 val y: Float = event.y
-                val (col, row) = getSquareFromCoordinates(x,y)
+                val (col, row) = getSquareFromCoordinates(x, y)
 
                 if (row in 0..7 && col in 0..7) {
-                    handleBoardClick(col,row)
+                    handleBoardClick(col, row)
                 }
             }
             MotionEvent.ACTION_DOWN -> {
                 val x: Float = event.x
                 val y: Float = event.y
-                val (col, row) = getSquareFromCoordinates(x,y)
+                val (col, row) = getSquareFromCoordinates(x, y)
 
                 if (row in 0..7 && col in 0..7) {
-                    handleBoardClick(col,row)
+                    handleBoardClick(col, row)
                 }
             }
         }
@@ -342,19 +334,18 @@ class ChessView : View {
      *
      * @return column and row on chessboard that was clicked
      */
-    private fun getSquareFromCoordinates(x: Float, y: Float): Pair<Int,Int>{
+    private fun getSquareFromCoordinates(x: Float, y: Float): Pair<Int, Int> {
         val tileSize = height.coerceAtMost(width) / 8
         val col: Int
         val row: Int
-        if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK){
+        if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             col = floor(x.div(tileSize)).toInt()
             row = floor(y.div(tileSize)).toInt()
+        } else {
+            col = abs(floor(x.div(tileSize)).toInt() - 7)
+            row = abs(floor(y.div(tileSize)).toInt() - 7)
         }
-        else {
-            col = abs(floor(x.div(tileSize)).toInt()-7)
-            row = abs(floor(y.div(tileSize)).toInt()-7)
-        }
-        return Pair(col,row)
+        return Pair(col, row)
     }
 
     /**
@@ -366,16 +357,15 @@ class ChessView : View {
     private fun getCoordinatesFromSquare(square: Square): Pair<Int, Int> {
         val col: Int
         val row: Int
-        if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK){
+        if (game.playerColor != com.pinguapps.chesstrainer.data.Color.BLACK) {
             col = square.col
             row = square.row
-        }
-       else {
+        } else {
             col = abs(square.col - 7)
             row = abs(square.row - 7)
         }
 
-        return Pair(col,row)
+        return Pair(col, row)
     }
 
     /** Takes the appropriate action depending on whether a piece is selected
@@ -387,7 +377,7 @@ class ChessView : View {
      *
      */
     private fun handleBoardClick(col: Int, row: Int) {
-        if (game.gameResult.value != GameResult.GAME_IN_PROGRESS){
+        if (game.gameResult.value != GameResult.GAME_IN_PROGRESS) {
             return
         }
 
@@ -396,9 +386,20 @@ class ChessView : View {
             val clickedSquare = board.board[col][row]
             if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
                 Log.d("chessview", "onmovemade called")
+                val isCapture = if (game.toMove == Color.WHITE){
+                    (clickedSquare.pieceColor == Color.BLACK)
+                } else {
+                    (clickedSquare.pieceColor == Color.WHITE)
+                }
                 game.makeHumanMove(clickedSquare)
-                onMoveMade(highlightedSquare,clickedSquare)
+                onMoveMade(highlightedSquare, clickedSquare)
 
+                if (isCapture){
+                    capturePlayer.start()
+                }
+                else {
+                    movePlayer.start()
+                }
                 invalidate()
 
             } else {
@@ -425,12 +426,12 @@ class ChessView : View {
     private fun drawValidMoves(canvas: Canvas) {
         if (board.validMoves.size > 0) {
             val square = board.selectedSquare
-            if (square != null &&square.pieceType != PieceType.NONE) {
+            if (square != null && square.pieceType != PieceType.NONE) {
                 val moves = board.generatePieceMoves(square)
                 for (move in moves) {
                     val circleSquare = move.endSquare
                     val tileSize = height.coerceAtMost(width) / 8
-                    val (x,y) = getCoordinatesFromSquare(circleSquare)
+                    val (x, y) = getCoordinatesFromSquare(circleSquare)
                     val drawable: Drawable? =
                         ResourcesCompat.getDrawable(resources, R.drawable.circle, null)
                     val bitmapDrawable = (drawable as BitmapDrawable).bitmap
@@ -446,8 +447,6 @@ class ChessView : View {
     }
 
 
-
-
     /**
      *  handles the promotion of pawns
      *  observes the promotion square value of current board and lets user choose piece
@@ -455,11 +454,12 @@ class ChessView : View {
      *
      */
     @SuppressLint("ClickableViewAccessibility")
-    private fun observePawnPromotion(){
-        findViewTreeLifecycleOwner()?.let {lifeCycleOwner ->
-            board.promotionSquare.observe(lifeCycleOwner) {square ->
+    private fun observePawnPromotion() {
+        findViewTreeLifecycleOwner()?.let { lifeCycleOwner ->
+            board.promotionSquare.observe(lifeCycleOwner) { square ->
 
-                val popupInflater = context.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
+                val popupInflater =
+                    context.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
                 val popupBind = PopupPawnPromotionBinding.inflate(popupInflater as LayoutInflater)
 
 
@@ -473,30 +473,45 @@ class ChessView : View {
 
 
                     popupBind.promotionKnight.setOnClickListener {
-                        board.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        board.promotePawn(
+                            square,
+                            PieceType.KNIGHT,
+                            com.pinguapps.chesstrainer.data.Color.WHITE
+                        )
 
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionBishop.setOnClickListener {
-                        board.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        board.promotePawn(
+                            square,
+                            PieceType.BISHOP,
+                            com.pinguapps.chesstrainer.data.Color.WHITE
+                        )
 
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionRook.setOnClickListener {
-                        board.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        board.promotePawn(
+                            square,
+                            PieceType.ROOK,
+                            com.pinguapps.chesstrainer.data.Color.WHITE
+                        )
 
                         invalidate()
                         popupWhite.dismiss()
                     }
                     popupBind.promotionQueen.setOnClickListener {
-                        board.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.WHITE)
+                        board.promotePawn(
+                            square,
+                            PieceType.QUEEN,
+                            com.pinguapps.chesstrainer.data.Color.WHITE
+                        )
                         invalidate()
                         popupWhite.dismiss()
                     }
-                }
-                else {
+                } else {
                     popupBind.promotionKnight.setImageResource(R.drawable.b_knight)
                     popupBind.promotionBishop.setImageResource(R.drawable.b_bishop)
                     popupBind.promotionRook.setImageResource(R.drawable.b_rook)
@@ -506,29 +521,45 @@ class ChessView : View {
                     popupBlack.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
 
                     popupBind.promotionKnight.setOnClickListener {
-                        game.promotePawn(square,PieceType.KNIGHT,com.pinguapps.chesstrainer.data.Color.BLACK)
-                        Log.d("test","pawn promotion to horsey")
+                        game.promotePawn(
+                            square,
+                            PieceType.KNIGHT,
+                            com.pinguapps.chesstrainer.data.Color.BLACK
+                        )
+                        Log.d("test", "pawn promotion to horsey")
 
                         invalidate()
                         popupBlack.dismiss()
                     }
                     popupBind.promotionBishop.setOnClickListener {
-                        game.promotePawn(square,PieceType.BISHOP,com.pinguapps.chesstrainer.data.Color.BLACK)
-                        Log.d("test","pawn promotion to b-shop")
+                        game.promotePawn(
+                            square,
+                            PieceType.BISHOP,
+                            com.pinguapps.chesstrainer.data.Color.BLACK
+                        )
+                        Log.d("test", "pawn promotion to b-shop")
                         invalidate()
 
                         popupBlack.dismiss()
                     }
                     popupBind.promotionRook.setOnClickListener {
-                        game.promotePawn(square,PieceType.ROOK,com.pinguapps.chesstrainer.data.Color.BLACK)
-                        Log.d("test","pawn promotion to rook")
+                        game.promotePawn(
+                            square,
+                            PieceType.ROOK,
+                            com.pinguapps.chesstrainer.data.Color.BLACK
+                        )
+                        Log.d("test", "pawn promotion to rook")
 
                         invalidate()
                         popupBlack.dismiss()
                     }
                     popupBind.promotionQueen.setOnClickListener {
-                        game.promotePawn(square,PieceType.QUEEN,com.pinguapps.chesstrainer.data.Color.BLACK)
-                        Log.d("test","pawn promotion to queen")
+                        game.promotePawn(
+                            square,
+                            PieceType.QUEEN,
+                            com.pinguapps.chesstrainer.data.Color.BLACK
+                        )
+                        Log.d("test", "pawn promotion to queen")
 
                         invalidate()
                         popupBlack.dismiss()
@@ -544,7 +575,8 @@ class ChessView : View {
     private fun observeGameResult() {
         findViewTreeLifecycleOwner()?.let { lifeCycleOwner ->
             game.gameResult.observe(lifeCycleOwner) { gameResult ->
-                val popupInflater = context.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
+                val popupInflater =
+                    context.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
                 val popupBind = PopupGameOverBinding.inflate(popupInflater as LayoutInflater)
                 val popupGG = PopupWindow(popupBind.root, WRAP_CONTENT, WRAP_CONTENT, false)
                 val playerColor = game.playerColor
@@ -553,40 +585,36 @@ class ChessView : View {
                     GameResult.GAME_IN_PROGRESS -> {}
                     GameResult.BLACK_WIN_CHECKMATE -> {
                         popupBind.resultTypeText.setText(R.string.result_checkmate)
-                        if (playerColor == com.pinguapps.chesstrainer.data.Color.BLACK){
+                        if (playerColor == com.pinguapps.chesstrainer.data.Color.BLACK) {
                             popupBind.resultText.setText(R.string.result_win)
-                        }
-                        else {
+                        } else {
                             popupBind.resultText.setText(R.string.result_lose)
                         }
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
                     }
                     GameResult.WHITE_WIN_CHECKMATE -> {
                         popupBind.resultTypeText.setText(R.string.result_checkmate)
-                        if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
+                        if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE) {
                             popupBind.resultText.setText(R.string.result_win)
-                        }
-                        else {
+                        } else {
                             popupBind.resultText.setText(R.string.result_lose)
                         }
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
                     }
                     GameResult.BLACK_WIN_RESIGNATION -> {
                         popupBind.resultTypeText.setText(R.string.result_resignation)
-                        if (playerColor == com.pinguapps.chesstrainer.data.Color.BLACK){
+                        if (playerColor == com.pinguapps.chesstrainer.data.Color.BLACK) {
                             popupBind.resultText.setText(R.string.result_win)
-                        }
-                        else {
+                        } else {
                             popupBind.resultText.setText(R.string.result_lose)
                         }
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
                     }
                     GameResult.WHITE_WIN_RESIGNATION -> {
                         popupBind.resultTypeText.setText(R.string.result_resignation)
-                        if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE){
+                        if (playerColor == com.pinguapps.chesstrainer.data.Color.WHITE) {
                             popupBind.resultText.setText(R.string.result_win)
-                        }
-                        else {
+                        } else {
                             popupBind.resultText.setText(R.string.result_lose)
                         }
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
@@ -596,7 +624,7 @@ class ChessView : View {
                         popupBind.resultText.setText(R.string.result_draw)
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
                     }
-                    GameResult.DRAW_BY_REPETITION ->{
+                    GameResult.DRAW_BY_REPETITION -> {
                         popupBind.resultTypeText.setText(R.string.result_repetition)
                         popupBind.resultText.setText(R.string.result_draw)
                         popupGG.showAtLocation(this.rootView, Gravity.CENTER, 0, 0)
@@ -656,7 +684,7 @@ class ChessView : View {
         }
     }
 
-    private fun observePlayerColor(){
+    private fun observePlayerColor() {
         findViewTreeLifecycleOwner()?.let { lifeCycleOwner ->
             game.playerIsBlack.observe(lifeCycleOwner) { _ ->
                 invalidate()

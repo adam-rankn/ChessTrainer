@@ -1,6 +1,7 @@
 package com.pinguapps.chesstrainer.ui.screens
 
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,10 +10,13 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +34,7 @@ fun OpeningScreen(
 ) {
     var linesVisible  by remember { mutableStateOf(true) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Column (
         modifier = modifier.padding(8.dp),
@@ -37,12 +42,13 @@ fun OpeningScreen(
     ) {
 
         Chessboard(openingViewModel.chessgame,
-            onMoveMade = { start, end ->
+            onMoveMade = remember{{ start, end ->
                 coroutineScope.launch {
                     openingViewModel.onHumanMoveMade(start,end)
                 }
-            })
+            }})
         ChessControlsBar(
+            context = context,
             onUndoPressed = openingViewModel::undoMove,
             onRedoPressed = openingViewModel::redoMove,
             onUndoAllPressed = openingViewModel::undoAllMoves,
@@ -52,9 +58,16 @@ fun OpeningScreen(
         if (openingViewModel.humanMoveLichessStats.collectAsState().value.totalGames > 0){
             LastMoveStats(move = openingViewModel.humanMoveLichessStats.collectAsState().value)
         }
-        if (linesVisible) {
+
+        AnimatedVisibility(
+            visible = linesVisible,
+            enter = expandVertically(
+                expandFrom = Alignment.Top
+            ) + fadeIn(initialAlpha = 0.3f),
+            exit = shrinkVertically()  + fadeOut()
+        ) {
             LinesBox(
-                moves = openingViewModel.lichessLines.collectAsState().value,
+                moves = openingViewModel.lichessLines.collectAsState().value
             )
         }
     }
@@ -64,9 +77,11 @@ fun OpeningScreen(
 fun LinesBox(moves: List<LichessDbMove>){
     val error = openingViewModel.lichessLinesErrorMessage.collectAsState().value
     if (error == "") {
-        for (move in moves) {
-            if (move.playedPercent > 0.05) { //todo prefs for % cutoff
-                LineItem(move = move)
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp),) {
+            for (move in moves) {
+                if (move.playedPercent > 0.005) { //todo prefs for % cutoff
+                    LineItem(move = move)
+                }
             }
         }
     }

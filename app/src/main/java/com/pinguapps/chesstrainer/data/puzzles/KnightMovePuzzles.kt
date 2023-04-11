@@ -36,6 +36,8 @@ class KnightMovePuzzles {
         Triple("8/8/2b5/1bP1k3/3P1p2/3N4/PP6/K7 w - - 0 1", listOf("f2","g4","h6","g8","e7","c8","b6"),7),
         Triple("k7/2b5/5b2/1b3P2/1N6/8/8/1K6 w - - 0 1", listOf("c2","e1","f3","d2","e4","c5","e6"),7),
 
+        Triple("k7/8/8/3q4/8/2N5/2b5/K7 w - - 0 1", listOf("e2","g1","h3","f2","f4","g4","f6","e8","c7","a6"),9),
+
     )
 
 

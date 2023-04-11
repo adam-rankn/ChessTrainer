@@ -144,7 +144,7 @@ fun fenToEnginePos(fen: String): Position {
     val pos2 = Position(pos)
     pos2.setWhiteMove(!pos.whiteMove)
     if (MoveGen.inCheck(pos2)) {
-        throw ChessParseError("King capture possible")
+        //throw ChessParseError("King capture possible")
     }
     TextIO.fixupEPSquare(pos)
     return pos

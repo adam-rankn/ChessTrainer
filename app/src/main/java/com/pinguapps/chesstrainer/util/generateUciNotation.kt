@@ -5,7 +5,7 @@ import com.pinguapps.chesstrainer.data.PieceType
 import com.pinguapps.chesstrainer.data.Square
 
 fun generateUciNotation(startSquare: Square, endSquare: Square): String {
-    //todo castling, promotion
+    //todo promotion, castles
     var notation = ""
     val colMap = hashMapOf(
         0 to "a",
@@ -22,6 +22,12 @@ fun generateUciNotation(startSquare: Square, endSquare: Square): String {
     notation += colMap[endSquare.col]
     notation += 7 - (endSquare.row) + 1
 
+    when (notation){
+        "e1c1" -> notation = "e1c1c"
+        "e1g1" -> notation = "e1g1c"
+        "e8c8" -> notation = "e8c8c"
+        "e8g8" -> notation = "e8g8c"
+    }
 
     return notation
 }

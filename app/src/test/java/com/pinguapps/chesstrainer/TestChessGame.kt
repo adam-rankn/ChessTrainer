@@ -114,7 +114,7 @@ class TestChessGame {
         game.redoAllMoves()
         assertEquals("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2",
             game.generateFenStringFromPosition())
-        //todo overhaul tests
+        //todo overhaul undo/redo tests
     }
 
     @Test
@@ -208,6 +208,8 @@ class TestChessGame {
         game.makeMove("e2e1")
         assertEquals(GameResult.GAME_IN_PROGRESS,game.gameResult.value)
         game.makeMove("e7e8")
+        game.makeMove("e1e2")
+        game.makeMove("e8e7")
         assertEquals(GameResult.DRAW_BY_REPETITION,game.gameResult.value)
 
         game.restartGame()
@@ -231,9 +233,15 @@ class TestChessGame {
         game.makeMove("e1e2")
         game.makeMove("e8e7")
         game.makeMove("e2e1")
-        assertEquals(GameResult.GAME_IN_PROGRESS,game.gameResult.value)
+
         game.makeMove("e7e8")
+        assertEquals(GameResult.GAME_IN_PROGRESS,game.gameResult.value)
+        game.makeMove("e1e2")
+
+        game.makeMove("e8e7")
         assertEquals(GameResult.DRAW_BY_REPETITION,game.gameResult.value)
+
+
 
         game.restartGame()
         game.makeMove("e2e4")
@@ -253,8 +261,13 @@ class TestChessGame {
         game.redoMove()
         game.redoMove()
         game.redoMove()
-        assertEquals(GameResult.GAME_IN_PROGRESS,game.gameResult.value)
+
         game.makeMove("e7e8")
+        assertEquals(GameResult.GAME_IN_PROGRESS,game.gameResult.value)
+        game.makeMove("e1e2")
+        game.makeMove("e8e7")
+
+        game.makeMove("e2e1")
         assertEquals(GameResult.DRAW_BY_REPETITION,game.gameResult.value)
 
         game.restartGame()
@@ -300,8 +313,16 @@ class TestChessGame {
         assert(game.isCpuTurn())
         assertFalse(game.isPlayerTurn())
         game.makeMove("e7e5")
+    }
 
+    @Test
+    fun testImportPgn(){
+        val game = Chessgame()
+        val list = game.importGameFromPgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6")
+        assertEquals(mutableListOf("1. e4 e5", "2. Nf3 Nc6", "3. Bb5 a6", "4. Ba4 Nf6"),list)
 
+        val test2 = game.importGameFromPgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 {This opening is called the Ruy Lopez.} 4. Ba4 Nf6")
 
+        assertEquals(mutableListOf("1. e4 e5", "2. Nf3 Nc6", "3. Bb5 a6", "4. Ba4 Nf6"),test2)
     }
 }

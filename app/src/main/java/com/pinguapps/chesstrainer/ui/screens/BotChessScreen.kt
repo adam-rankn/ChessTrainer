@@ -17,8 +17,7 @@ fun BotChessScreen(
     modifier: Modifier = Modifier
 ){
     val resources = LocalContext.current.resources
-
-
+    val context = LocalContext.current
 
     Column (
         modifier = modifier.padding(16.dp),
@@ -26,6 +25,7 @@ fun BotChessScreen(
     ) {
         Chessboard(chessboardViewModel.chessgame)
         ChessControlsBar(
+            context = context,
             onUndoPressed = { chessboardViewModel.undoMove()},
             onRedoPressed = { chessboardViewModel.redoMove()},
             onUndoAllPressed = { chessboardViewModel.undoAllMoves() },

@@ -42,13 +42,12 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     var hintsRemaining = 0
     var fiftyMoveCounter = 0
     var moveCounter = 1
-    val positionMap = mutableMapOf<String,Int>()
+    private val positionMap = mutableMapOf<String, Int>()
     var targetSquare: Square? = null
-    val lastPosition: MutableLiveData<String> = MutableLiveData("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    val lastPosition: MutableLiveData<String> =
+        MutableLiveData("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     val lastMoves: Stack<Move> = Stack()
-    val futureMoves: Stack<Move> = Stack()
-
-
+    private val futureMoves: Stack<Move> = Stack()
 
 
     init {
@@ -60,7 +59,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * starts a new game
      *
      */
-    open fun newGame(){
+    open fun newGame() {
         chessboard.clearBoard()
         chessboard.resetBoard()
         positionHistory.clear()
@@ -79,7 +78,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * @see newGame
      *
      */
-    open fun restartGame(){
+    open fun restartGame() {
         newGame()
     }
 
@@ -87,7 +86,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * sets the move timers and sends the fen string to the board to load position
      *
      */
-    fun loadPositionFenString(fenString: String){
+    fun loadPositionFenString(fenString: String) {
         val fenList = fenString.split(" ")
         val halfMoveString = fenList[4]
         val fullMoveString = fenList[5]
@@ -105,7 +104,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     fun generateFenStringFromPosition(): String {
         var fen = chessboard.getPartialFenStringFromPosition()
         fen += fiftyMoveCounter.toString()
-        fen +=" "
+        fen += " "
         fen += moveCounter.toString()
         return fen
     }
@@ -115,7 +114,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * makes a move from user input
      *
      */
-    open fun makeHumanMove(square: Square){
+    open fun makeHumanMove(square: Square) {
         for (move in chessboard.validMoves) {
             if (move.endSquare == square) {
                 doMove(move)
@@ -128,13 +127,13 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * takes a UCI string and generates a move object, then makes the move
      * @param uci the move in UCI format
      */
-    fun makeMove(uci: String){
+    fun makeMove(uci: String) {
         //todo test
         //todo en peasant
-        val start = uci.slice(IntRange(0,1))
-        val end = uci.slice(IntRange(2,3))
+        val start = uci.slice(IntRange(0, 1))
+        val end = uci.slice(IntRange(2, 3))
 
-        val promotion: PieceType = if (uci.length == 5){
+        val promotion: PieceType = if (uci.length == 5) {
             when (uci[4]) {
                 'q' -> PieceType.QUEEN
                 'r' -> PieceType.ROOK
@@ -163,9 +162,9 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
             pieceType = startSquare.pieceType,
             capturedPiece = endSquare.pieceType,
             castling = castling
-            )
+        )
         doMove(move)
-        if (promotion != PieceType.NONE){
+        if (promotion != PieceType.NONE) {
             chessboard.promotePawn(
                 color = color,
                 pieceType = promotion,
@@ -177,10 +176,10 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     /**
      * moves a piece
      */
-    private fun doMove(move: Move){
+    private fun doMove(move: Move) {
         positionHistory.push(generateFenStringFromPosition())
-        if (chessboard.turn == Color.BLACK){
-            moveCounter ++
+        if (chessboard.turn == Color.BLACK) {
+            moveCounter++
         }
         chessboard.selectedSquare = move.startSquare // needed in case of speech to text
         chessboard.makeMove(move)
@@ -192,8 +191,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         if (move.pieceType == PieceType.PAWN) {
             if (move.endSquare.row == 0) {
                 setPawnPromoted(move.endSquare)
-            }
-            else if (move.endSquare.row == 7){
+            } else if (move.endSquare.row == 7) {
                 setPawnPromoted(move.endSquare)
             }
         }
@@ -204,30 +202,30 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     /**
      *  sets the promotion square so that user can choose piece to promote to
      */
-    open fun setPawnPromoted(square: Square){
+    open fun setPawnPromoted(square: Square) {
         chessboard.promotionSquare.postValue(square)
     }
 
-    open fun makeComputerMove(){
+    open fun makeComputerMove() {
         val moveStr = computer.getMove(generateFenStringFromPosition())
         positionHistory.push(generateFenStringFromPosition())
-        if (chessboard.turn == Color.BLACK){
-            moveCounter ++
+        if (chessboard.turn == Color.BLACK) {
+            moveCounter++
         }
         makeMove(moveStr)
         updateCountersAndCheckForDraw()
 
         //pawn promotion
         if ('q' in moveStr.lowercase()) {
-            setPawnPromoted(chessboard.getSquare(moveStr.slice(IntRange(2,3))))
+            setPawnPromoted(chessboard.getSquare(moveStr.slice(IntRange(2, 3))))
         }
     }
 
     /**
      * immediately promotes a pawn on square to specified piece
      */
-    open fun promotePawn(square: Square, pieceType: PieceType, color: Color){
-        chessboard.promotePawn(square,pieceType,color)
+    open fun promotePawn(square: Square, pieceType: PieceType, color: Color) {
+        chessboard.promotePawn(square, pieceType, color)
         //makeComputerMove()
     }
 
@@ -235,7 +233,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * removes the move counter data from the string for use in threefold checking
      * @see checkThreefoldRepetition
      */
-     fun stripMoveDataFromFen(fenString: String): String {
+    private fun stripMoveDataFromFen(fenString: String): String {
         return fenString.split(" ").take(4).toString()
     }
 
@@ -244,9 +242,9 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * @see checkThreefoldRepetition
      * @see stripMoveDataFromFen
      */
-    private fun addPosToThreefoldMap(string: String = generateFenStringFromPosition()){
+    private fun addPosToThreefoldMap(string: String = generateFenStringFromPosition()) {
         val pos = stripMoveDataFromFen(string)
-        positionMap[pos] = (positionMap[pos] ?:0) +1
+        positionMap[pos] = (positionMap[pos] ?: 0) + 1
     }
 
     /**
@@ -255,9 +253,9 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * @see stripMoveDataFromFen
      * @see undoMove
      */
-    private fun removePosFromThreefoldMap(string: String = generateFenStringFromPosition()){
+    private fun removePosFromThreefoldMap(string: String = generateFenStringFromPosition()) {
         val pos = stripMoveDataFromFen(string)
-        positionMap[pos] = (positionMap[pos] ?:1) -1
+        positionMap[pos] = (positionMap[pos] ?: 1) - 1
     }
 
     /**
@@ -267,7 +265,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      *
      */
     fun undoMove() {
-        if (positionHistory.isEmpty()){
+        if (positionHistory.isEmpty()) {
             return
         }
         if (positionHistory.isNotEmpty()) {
@@ -288,7 +286,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      *
      */
     fun redoMove() {
-        if (futurePositions.isEmpty()){
+        if (futurePositions.isEmpty()) {
             return
         }
         if (futurePositions.isNotEmpty()) {
@@ -308,12 +306,12 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * @see undoMove
      *
      */
-    fun undoAllMoves(){
-        if (positionHistory.isEmpty()){
+    fun undoAllMoves() {
+        if (positionHistory.isEmpty()) {
             return
         }
         positionHistory.push(generateFenStringFromPosition())
-        while (positionHistory.size > 1){
+        while (positionHistory.size > 1) {
             val position = stripMoveDataFromFen(positionHistory.peek())
             removePosFromThreefoldMap(position)
             futurePositions.push(positionHistory.pop())
@@ -331,13 +329,13 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * @see redoMove
      *
      */
-    fun redoAllMoves(){
-        if (futurePositions.isEmpty()){
+    fun redoAllMoves() {
+        if (futurePositions.isEmpty()) {
             return
         }
         positionHistory.push(generateFenStringFromPosition())
         addPosToThreefoldMap()
-        while (futurePositions.size > 1){
+        while (futurePositions.size > 1) {
             val position = stripMoveDataFromFen(futurePositions.peek())
             addPosToThreefoldMap(position)
             positionHistory.push(futurePositions.pop())
@@ -355,11 +353,10 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * resigns the current game
      *
      */
-    fun resign(){
+    fun resign() {
         if (playerColor == Color.BLACK) {
             gameResult.postValue(GameResult.WHITE_WIN_RESIGNATION)
-        }
-        else if (playerColor == Color.WHITE){
+        } else if (playerColor == Color.WHITE) {
             gameResult.postValue(GameResult.BLACK_WIN_RESIGNATION)
         }
     }
@@ -376,14 +373,13 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * Increments or resets the fifty move counter and sets a draw if 50 moves ( 100 half moves) is reached
      * @see fiftyMoveCounter
      */
-    private fun updateFiftyMoveCounter(move: Move){
-        if (move.capturedPiece != PieceType.NONE || move.pieceType == PieceType.PAWN){
+    private fun updateFiftyMoveCounter(move: Move) {
+        if (move.capturedPiece != PieceType.NONE || move.pieceType == PieceType.PAWN) {
             fiftyMoveCounter = 0
+        } else {
+            fiftyMoveCounter++
         }
-        else {
-            fiftyMoveCounter ++
-        }
-        if (fiftyMoveCounter == 100){
+        if (fiftyMoveCounter == 100) {
             gameResult.postValue(GameResult.DRAW_BY_FIFTY)
         }
     }
@@ -392,8 +388,8 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * sets draw if three move repetition has happened
      * @see positionMap
      */
-    private fun checkThreefoldRepetition(){
-        if (positionMap.containsValue(3)){
+    private fun checkThreefoldRepetition() {
+        if (positionMap.containsValue(3)) {
             gameResult.postValue(GameResult.DRAW_BY_REPETITION)
         }
     }
@@ -410,7 +406,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
         var blackMaterial = 0
         var whiteMaterial = 0
         for (char in boardString) {
-            if (char.isUpperCase()){
+            if (char.isUpperCase()) {
                 // white
                 when (char) {
                     'P' -> return
@@ -419,8 +415,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
                     'R' -> return
                     'Q' -> return
                 }
-            }
-            else if (char.isLowerCase()){
+            } else if (char.isLowerCase()) {
                 //black
                 when (char) {
                     'p' -> return
@@ -431,7 +426,7 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
                 }
             }
         }
-        if (whiteMaterial < 4 && blackMaterial < 4 ){
+        if (whiteMaterial < 4 && blackMaterial < 4) {
             gameResult.postValue(GameResult.DRAW_BY_INSUFFICIENT)
         }
     }
@@ -442,12 +437,32 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
      * @see checkForInsufficientMaterial
      * @see checkThreefoldRepetition
      */
-    private fun updateCountersAndCheckForDraw(){
+    private fun updateCountersAndCheckForDraw() {
         val fenString = generateFenStringFromPosition()
         addPosToThreefoldMap(fenString)
         checkThreefoldRepetition()
         checkForInsufficientMaterial(fenString)
     }
 
+
+    fun importGameFromPgn(string: String): MutableList<String> {
+
+        //remove comments
+        val string2 = string as CharSequence
+        val pgnString = string2.replace(Regex("\\{[^>]*}"), "")
+        val pgn = (pgnString.split(" ") as MutableList<String>)
+        while (pgn.contains("")) {
+            pgn.remove("")
+        }
+        val parsedPgnList: MutableList<String> = mutableListOf()
+        println(pgn.toString())
+        while (pgn.isNotEmpty()) {
+            val nextThree = pgn.take(3)
+            println(nextThree.toString())
+            parsedPgnList.add(nextThree.joinToString(" ").trim())
+            pgn.removeAll(nextThree)
+        }
+        return parsedPgnList
+    }
 
 }

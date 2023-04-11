@@ -34,12 +34,18 @@ class PassedPawnPuzzleGame(
      */
     override fun setPawnPromoted(square: Square){
         if (square.row == 0 && !canKingTake(square)) {
-            gameResult.value = GameResult.PUZZLE_WON
+            gameResult.postValue(GameResult.PUZZLE_WON)
             promotePawn(square, PieceType.QUEEN, Color.WHITE)
         }
-        else if (gameResult.value == GameResult.GAME_IN_PROGRESS){
-            gameResult.value = GameResult.PUZZLE_FAILED
-            promotePawn(square, PieceType.QUEEN,Color.BLACK)
+        else if (square.row == 0 && canKingTake(square)) {
+            gameResult.postValue(GameResult.PUZZLE_FAILED)
+            promotePawn(square, PieceType.QUEEN, Color.WHITE)
+        }
+        //deal with "simultaneous" promotion
+        else if (square.row == 7 && gameResult.value == GameResult.GAME_IN_PROGRESS){
+            gameResult.postValue(GameResult.PUZZLE_FAILED)
+            promotePawn(square, PieceType.QUEEN, Color.BLACK)
+
         }
     }
 
@@ -48,7 +54,7 @@ class PassedPawnPuzzleGame(
      */
     override fun newGame() {
         super.newGame()
-        puzzle = PassedPawnPuzzleGenerator().generateRandomPawnPuzzle()
+        puzzle = PassedPawnPuzzleGenerator().generateTypeWeightedRandomPawnPuzzle()
         chessboard.loadPositionFenString(puzzle)
     }
 
@@ -61,7 +67,7 @@ class PassedPawnPuzzleGame(
 
     }
 
-    fun canKingTake(square: Square): Boolean {
+    private fun canKingTake(square: Square): Boolean {
         val row = square.row
         val col = square.col
 

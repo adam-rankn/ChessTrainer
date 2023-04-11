@@ -111,7 +111,7 @@ val kingsPawn =
         ),
         Opening(
             "Bongcloud",
-            "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"
+            "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPPKPPP/RNBQ1BNR b kq - 0 1"
         )
     )
 

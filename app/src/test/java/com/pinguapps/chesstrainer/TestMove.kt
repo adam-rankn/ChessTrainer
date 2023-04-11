@@ -31,7 +31,7 @@ class TestMove {
             pieceType = PieceType.KING
         )
 
-        assertEquals("e1g1",castlesMove.uciNotation)
+        assertEquals("e1g1c",castlesMove.uciNotation)
 
     }
 

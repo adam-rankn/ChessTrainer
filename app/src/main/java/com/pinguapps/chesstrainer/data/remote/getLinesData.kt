@@ -25,10 +25,10 @@ fun getLinesData(data: LichessOpeningData): List<LichessDbMove> {
                 val uci: String =
                     if (move.san == "O-O"|| move.san == "O-O-O") {
                         when (move.uci) {
-                            "e1h1" -> "e1g1"
-                            "e1a1" -> "e1c1"
-                            "e8h8" -> "e8g8"
-                            "e8a8" -> "e8c8"
+                            "e1h1" -> "e1g1c"
+                            "e1a1" -> "e1c1c"
+                            "e8h8" -> "e8g8c"
+                            "e8a8" -> "e8c8c"
                             else -> {
                                 move.uci!!
                             }

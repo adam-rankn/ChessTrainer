@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -30,9 +31,11 @@ import com.pinguapps.chesstrainer.ui.OpeningViewModel
 import com.pinguapps.chesstrainer.ui.composables.AutoCompleteBox
 import com.pinguapps.chesstrainer.ui.composables.Chessboard
 import com.pinguapps.chesstrainer.ui.composables.TextSearchBar
+import com.pinguapps.chesstrainer.ui.util.withSound
 import kotlinx.coroutines.launch
 
 val openingViewModel = OpeningViewModel()
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun OpeningSetupScreen(
@@ -43,8 +46,9 @@ fun OpeningSetupScreen(
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
-    Column (
+    Column(
         modifier = modifier.padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -55,27 +59,27 @@ fun OpeningSetupScreen(
 
         val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
-       Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = text,
                 onValueChange = {
                     text = it
                 },
-                label = { Text(text = "Load from FEN")},
+                label = { Text(text = "Load from FEN") },
                 modifier = Modifier.weight(1f)
 
             )
-            Button(onClick = {
-                try {
-                    openingViewModel.loadPositionFromFenString(text.text)
-                }
-                catch (e: Exception){
-                    //todo
-                    Toast.makeText(context,"failed to load position", LENGTH_SHORT).show()
-                }
-            },
-            modifier = Modifier.padding(8.dp),
-            contentPadding = PaddingValues(8.dp)
+            Button(
+                onClick = remember{{
+                    try {
+                        openingViewModel.loadPositionFromFenString(text.text)
+                    } catch (e: Exception) {
+                        //todo
+                        Toast.makeText(context, "failed to load position", LENGTH_SHORT).show()
+                    }
+                }}.withSound(context),
+                modifier = Modifier.padding(8.dp),
+                contentPadding = PaddingValues(8.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
@@ -83,37 +87,56 @@ fun OpeningSetupScreen(
                 )
             }
         }
-
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.w_king),
                 contentDescription = "play as white",
-                modifier = Modifier.size(60.dp).clickable {
-                    openingViewModel.onPlayerColorClicked(Color.WHITE)
-                }
+                modifier = Modifier
+                    .size(60.dp)
+                    .clickable {
+                        openingViewModel.onPlayerColorClicked(Color.WHITE)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
             )
             Image(
                 painter = painterResource(id = R.drawable.b_king),
                 contentDescription = "play as black",
-                modifier = Modifier.size(60.dp).clickable {
-                    openingViewModel.onPlayerColorClicked(Color.BLACK)
-                }
+                modifier = Modifier
+                    .size(60.dp)
+                    .clickable {
+                        openingViewModel.onPlayerColorClicked(Color.BLACK)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
             )
-            Button(modifier = Modifier.padding(16.dp),
-                onClick = openingViewModel::resetGame) {
+            Button(
+                onClick = remember{{
+                    openingViewModel.resetGame()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }}
+                    .withSound(context),
+                modifier = Modifier.padding(16.dp),
+            ) {
                 Text(text = "Reset Board")
             }
         }
-        Button(onClick = {
-            onStartClicked()
-            coroutineScope.launch {
-                openingViewModel.startTraining()
-            }
-        }, modifier = Modifier.fillMaxWidth().height(80.dp)
+        Button(
+            onClick = remember{
+                {
+                    onStartClicked()
+                    coroutineScope.launch {
+                        openingViewModel.startTraining()
+                    }
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }}.withSound(context),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
         ) {
             Text(text = "Start Training With Current Position")
         }
-
     }
 }
 
@@ -140,7 +163,7 @@ fun AutoCompleteOpeningBox(openings: List<Opening>) {
         itemContent = { opening ->
             OpeningAutoCompleteItem(opening)
         },
-        keySelector = {opening ->
+        keySelector = { opening ->
             opening.fen
         }
     ) {

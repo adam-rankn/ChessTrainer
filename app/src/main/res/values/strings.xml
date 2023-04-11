@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Chess Trainer</string>
+    <string name="app_name">Clever Crow</string>
 
     <string name="result_win">You Win</string>
     <string name="result_draw">Draw</string>

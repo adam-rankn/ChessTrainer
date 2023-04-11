@@ -60,11 +60,6 @@ fun ChessApp(modifier: Modifier = Modifier,
     val currentScreen = ChessScreen.valueOf(
         backStackEntry?.destination?.route ?: ChessScreen.Menu.name
     )
-    // TODO: Create NavController
-
-    // TODO: Get current back stack entry
-
-    // TODO: Get the name of the current screen
     Scaffold(
         topBar = {
             ChessAppBar(

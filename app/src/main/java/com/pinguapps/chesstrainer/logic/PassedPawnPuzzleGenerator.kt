@@ -28,10 +28,13 @@ class PassedPawnPuzzleGenerator {
 
 
     fun generateTypeWeightedRandomPawnPuzzle(): String {
-        return  when (randomGenerator.nextInt(0,3)) {
+        return  when (randomGenerator.nextInt(0,6)) {
             0 -> generateSquarePuzzle()
-            1 -> generateSquarePuzzle()
+            1 -> generateUndoublerPuzzle()
             2 -> generateHatPuzzle()
+            3 -> generateSquigglyTrianglePuzzle()
+            4 -> generateOtherPuzzle()
+            5 -> generateSpacerPuzzle()
             else -> {""}
         }
     }
@@ -41,12 +44,12 @@ class PassedPawnPuzzleGenerator {
             0,puzzles.allPuzzles.size)]
     }
 
-    fun generateSquarePuzzle(): String {
+    private fun generateSquarePuzzle(): String {
         return puzzles.whiteSquarePositionsList[randomGenerator.nextInt(
             0, puzzles.whiteSquarePositionsList.size)]
     }
 
-    fun generateHatPuzzle(): String {
+    private fun generateHatPuzzle(): String {
         return puzzles.whiteHatPositionsList[randomGenerator.nextInt(
             0, puzzles.whiteHatPositionsList.size)]
     }
@@ -56,8 +59,17 @@ class PassedPawnPuzzleGenerator {
             0, puzzles.whiteSquigglyPositionsList.size)]
     }
 
-    fun generateUndoublerPuzzle(): String {
+    private fun generateUndoublerPuzzle(): String {
         return puzzles.whiteUndoublerList[randomGenerator.nextInt(
             0, puzzles.whiteUndoublerList.size)]
+    }
+
+    private fun generateSpacerPuzzle(): String {
+        return puzzles.spacerPuzzles[randomGenerator.nextInt(
+            0, puzzles.spacerPuzzles.size)]
+    }
+    private fun generateOtherPuzzle(): String {
+        return puzzles.otherPuzzles[randomGenerator.nextInt(
+            0, puzzles.otherPuzzles.size)]
     }
 }
