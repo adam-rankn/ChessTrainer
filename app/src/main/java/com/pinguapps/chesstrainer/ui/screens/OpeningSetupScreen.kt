@@ -1,6 +1,8 @@
 package com.pinguapps.chesstrainer.ui.screens
 
 
+import android.content.Context
+import android.content.res.Configuration
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -17,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
@@ -45,48 +48,46 @@ fun OpeningSetupScreen(
 ) {
 
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            Row{
+                Chessboard(openingViewModel.chessgame)
+                Column() {
+                    AutoCompleteOpeningBox(openings = allOpenings)
+                    SetupUi(onStartClicked = onStartClicked, context = context)
+                }
+
+            }
+        }
+        else -> {
+            Column(
+                modifier = modifier.padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                AutoCompleteOpeningBox(openings = allOpenings)
+                Chessboard(openingViewModel.chessgame)
+                SetupUi(onStartClicked = onStartClicked, context = context)
+
+            }
+        }
+    }
+}
+
+@Composable
+fun SetupUi(
+    onStartClicked: () -> Unit,
+    modifier: Modifier = Modifier,
+    context: Context,
+){
     val coroutineScope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
-
     Column(
         modifier = modifier.padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
-        AutoCompleteOpeningBox(openings = allOpenings)
-        Chessboard(openingViewModel.chessgame)
-        var text by remember { mutableStateOf(TextFieldValue("")) }
-
-        val clipboardManager: ClipboardManager = LocalClipboardManager.current
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                },
-                label = { Text(text = "Load from FEN") },
-                modifier = Modifier.weight(1f)
-
-            )
-            Button(
-                onClick = remember{{
-                    try {
-                        openingViewModel.loadPositionFromFenString(text.text)
-                    } catch (e: Exception) {
-                        //todo
-                        Toast.makeText(context, "failed to load position", LENGTH_SHORT).show()
-                    }
-                }}.withSound(context),
-                modifier = Modifier.padding(8.dp),
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.back_button)
-                )
-            }
-        }
+        GameLoader(context)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -139,7 +140,6 @@ fun OpeningSetupScreen(
         }
     }
 }
-
 
 @Composable
 fun OpeningAutoCompleteItem(opening: Opening) {
@@ -203,3 +203,41 @@ fun AutoCompleteOpeningBox(openings: List<Opening>) {
         )
     }
 }
+
+@Composable
+fun GameLoader(
+    context: Context,
+
+){
+    var text by remember { mutableStateOf(TextFieldValue("")) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = {
+                text = it
+            },
+            label = { Text(text = "Load from FEN") },
+            modifier = Modifier.weight(1f)
+
+        )
+        Button(
+            onClick = remember{{
+                try {
+                    openingViewModel.loadPositionFromFenString(text.text)
+                } catch (e: Exception) {
+                    //todo
+                    Toast.makeText(context, "failed to load position", LENGTH_SHORT).show()
+                }
+            }}.withSound(context),
+            modifier = Modifier.padding(8.dp),
+            contentPadding = PaddingValues(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.back_button)
+            )
+        }
+    }
+}
+
+

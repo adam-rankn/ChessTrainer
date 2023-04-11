@@ -1,6 +1,7 @@
 package com.pinguapps.chesstrainer.ui.screens
 
 
+import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -15,12 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pinguapps.chesstrainer.data.LichessDbMove
+import com.pinguapps.chesstrainer.data.allOpenings
 import com.pinguapps.chesstrainer.ui.composables.ChessControlsBar
 import com.pinguapps.chesstrainer.ui.composables.Chessboard
 import kotlinx.coroutines.launch
@@ -32,96 +35,161 @@ fun OpeningScreen(
     modifier: Modifier = Modifier,
     onCancelButtonClicked: () -> Unit = {}
 ) {
-    var linesVisible  by remember { mutableStateOf(true) }
+    var linesVisible by remember { mutableStateOf(true) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            Row {
+                Chessboard(openingViewModel.chessgame,
+                    onMoveMade = remember {
+                        { start, end ->
+                            coroutineScope.launch {
+                                openingViewModel.onHumanMoveMade(start, end)
+                            }
+                        }
+                    })
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
 
-    Column (
-        modifier = modifier.padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
-        Chessboard(openingViewModel.chessgame,
-            onMoveMade = remember{{ start, end ->
-                coroutineScope.launch {
-                    openingViewModel.onHumanMoveMade(start,end)
+                    AnimatedVisibility(
+                        visible = (openingViewModel.humanMoveLichessStats.collectAsState().value.totalGames > 0),
+                        enter = expandVertically(
+                            expandFrom = Alignment.Top
+                        ) + fadeIn(initialAlpha = 0.3f),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        LastMoveStats(move = openingViewModel.humanMoveLichessStats.collectAsState().value)
+                    }
+                    AnimatedVisibility(
+                        visible = linesVisible,
+                        enter = expandVertically(
+                            expandFrom = Alignment.Top
+                        ) + fadeIn(initialAlpha = 0.3f),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        LinesBox(
+                            moves = openingViewModel.lichessLines.collectAsState().value
+                        )
+                    }
+                    Spacer(modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(0.1f))
+                    ChessControlsBar(
+                        context = context,
+                        onUndoPressed = openingViewModel::undoMove,
+                        onRedoPressed = openingViewModel::redoMove,
+                        onUndoAllPressed = openingViewModel::undoAllMoves,
+                        onRedoAllPressed = openingViewModel::redoAllMoves,
+                        onHintPressed = { linesVisible = linesVisible.not() },
+                    )
                 }
-            }})
-        ChessControlsBar(
-            context = context,
-            onUndoPressed = openingViewModel::undoMove,
-            onRedoPressed = openingViewModel::redoMove,
-            onUndoAllPressed = openingViewModel::undoAllMoves,
-            onRedoAllPressed = openingViewModel::redoAllMoves,
-            onHintPressed = { linesVisible= linesVisible.not() },
-        )
-        if (openingViewModel.humanMoveLichessStats.collectAsState().value.totalGames > 0){
-            LastMoveStats(move = openingViewModel.humanMoveLichessStats.collectAsState().value)
-        }
 
-        AnimatedVisibility(
-            visible = linesVisible,
-            enter = expandVertically(
-                expandFrom = Alignment.Top
-            ) + fadeIn(initialAlpha = 0.3f),
-            exit = shrinkVertically()  + fadeOut()
-        ) {
-            LinesBox(
-                moves = openingViewModel.lichessLines.collectAsState().value
-            )
+            }
+        }
+        else -> {
+            Column(
+                modifier = modifier.padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                Chessboard(openingViewModel.chessgame,
+                    onMoveMade = remember {
+                        { start, end ->
+                            coroutineScope.launch {
+                                openingViewModel.onHumanMoveMade(start, end)
+                            }
+                        }
+                    })
+                ChessControlsBar(
+                    context = context,
+                    onUndoPressed = openingViewModel::undoMove,
+                    onRedoPressed = openingViewModel::redoMove,
+                    onUndoAllPressed = openingViewModel::undoAllMoves,
+                    onRedoAllPressed = openingViewModel::redoAllMoves,
+                    onHintPressed = { linesVisible = linesVisible.not() },
+                )
+                if (openingViewModel.humanMoveLichessStats.collectAsState().value.totalGames > 0) {
+                    LastMoveStats(move = openingViewModel.humanMoveLichessStats.collectAsState().value)
+                }
+
+                AnimatedVisibility(
+                    visible = linesVisible,
+                    enter = expandVertically(
+                        expandFrom = Alignment.Top
+                    ) + fadeIn(initialAlpha = 0.3f),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    LinesBox(
+                        moves = openingViewModel.lichessLines.collectAsState().value
+                    )
+                }
+            }
         }
     }
+
+
 }
 
 @Composable
-fun LinesBox(moves: List<LichessDbMove>){
+fun LinesBox(moves: List<LichessDbMove>) {
     val error = openingViewModel.lichessLinesErrorMessage.collectAsState().value
     if (error == "") {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp),) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             for (move in moves) {
                 if (move.playedPercent > 0.005) { //todo prefs for % cutoff
                     LineItem(move = move)
                 }
             }
         }
-    }
-    else {
+    } else {
         Text(text = error)
     }
 }
 
 @Composable
-fun LineItem(move: LichessDbMove){
+fun LineItem(move: LichessDbMove) {
 
     Row {
-        val whitePercent = (move.whiteWinPercent*100).toInt()
-        val drawPercent = (move.drawPercent*100).toInt()
-        val blackPercent = (move.blackWinPercent*100).toInt()
-        val playedPercent = (move.playedPercent*100).toInt()
-        Text(text = "${move.san} $playedPercent%",
-        modifier = Modifier.padding(end = 8.dp))
-        Row(modifier = Modifier.border(BorderStroke(2.dp, SolidColor(Color.Black)))){
+        val whitePercent = (move.whiteWinPercent * 100).toInt()
+        val drawPercent = (move.drawPercent * 100).toInt()
+        val blackPercent = (move.blackWinPercent * 100).toInt()
+        val playedPercent = (move.playedPercent * 100).toInt()
+        Text(
+            text = "${move.san} $playedPercent%",
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        Row(modifier = Modifier.border(BorderStroke(2.dp, SolidColor(Color.Black)))) {
 
-            Text(text = "$whitePercent%", textAlign = TextAlign.Center,
+            Text(
+                text = "$whitePercent%", textAlign = TextAlign.Center,
                 color = Color.Black, modifier = Modifier
                     .weight(max(move.whiteWinPercent, 0.15f))
-                    .background(Color.White))
+                    .background(Color.White)
+            )
 
-            Text(text = "$drawPercent%", textAlign = TextAlign.Center,
+            Text(
+                text = "$drawPercent%", textAlign = TextAlign.Center,
                 color = Color.White, modifier = Modifier
                     .weight(max(move.drawPercent, 0.15f))
-                    .background(Color.Gray))
+                    .background(Color.Gray)
+            )
 
-            Text(text = "$blackPercent%",textAlign = TextAlign.Center,
+            Text(
+                text = "$blackPercent%", textAlign = TextAlign.Center,
                 color = Color.White, modifier = Modifier
                     .weight(max(move.blackWinPercent, 0.15f))
-                    .background(Color.Black))
+                    .background(Color.Black)
+            )
         }
     }
 }
 
 @Composable
-fun LastMoveStats(move: LichessDbMove){
+fun LastMoveStats(move: LichessDbMove) {
     //todo make this not look terrible
     val error = openingViewModel.humanMoveErrorMessage.collectAsState().value
     if (error == "") {
@@ -182,8 +250,7 @@ fun LastMoveStats(move: LichessDbMove){
                 }
             }
         }
-    }
-    else{
+    } else {
         Text(text = error)
     }
 }
