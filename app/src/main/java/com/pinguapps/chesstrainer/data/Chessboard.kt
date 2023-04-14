@@ -35,6 +35,9 @@ class Chessboard {
         loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     }
 
+    /**
+     * removes all pieces from the board and wipes all board state data
+     */
     fun clearBoard() {
         for (col in board) {
             for (square in col) {
@@ -55,10 +58,17 @@ class Chessboard {
         validMoves = mutableListOf()
     }
 
+    /**
+     * resets board to starting position
+     */
     fun resetBoard() {
         loadPositionFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     }
 
+    /**
+     * returns the square according to the given human readable notation
+     * for example, e4
+     */
     fun getSquare(notation: String): Square {
         val colStr: String = notation.substring(0, 1)
         val rowStr: String = notation.substring(1, 2)
@@ -81,14 +91,23 @@ class Chessboard {
     }
 
 
+    /**
+     * returns the square at the given coordinates
+     */
     fun getSquare(col: Int, row: Int): Square {
         return board[col][row]
     }
 
+    /**
+     * returns the type of piece on the given square
+     */
     fun getPieceOnSquare(notation: String): Piece {
         return getSquare(notation).piece
     }
 
+    /**
+     * makes a test move on a temporary board.
+     */
     private fun testMakeMove(move: Move) {
 
         val startSquare = move.startSquare
@@ -120,6 +139,9 @@ class Chessboard {
         }
     }
 
+    /**
+     * checks if a move is among the valid moves available to current piece.
+     */
     fun isMoveValid(square: Square): Boolean {
         for (move in validMoves) {
             if (move.endSquare == square) {
@@ -1510,6 +1532,9 @@ class Chessboard {
         return false
     }
 
+    /**
+     * promotes a pawns and checks if the promotion causes any checks or pins
+     */
     fun promotePawn(square: Square, pieceType: PieceType, color: Color) {
         board[square.col][square.row].piece = Piece(color, pieceType)
 
@@ -1770,8 +1795,10 @@ class Chessboard {
         }
     }
 
+    /**
+     * updates the castling rights flags
+     */
     private fun updateCastlingRights(move: Move) {
-        //todo test
         if (move.pieceType == PieceType.KING) {
             if (move.startSquare.pieceColor == Color.BLACK) {
                 blackCastleQueenRights = false
@@ -1781,14 +1808,19 @@ class Chessboard {
                 whiteCastleQueenRights = false
             }
         } else if (move.pieceType == PieceType.ROOK) {
-            if (move.startSquare == getSquare("h1")) {
-                whiteCastleKingRights = false
-            } else if (move.startSquare == getSquare("a1")) {
-                whiteCastleQueenRights = false
-            } else if (move.startSquare == getSquare("h8")) {
-                blackCastleKingRights = false
-            } else if (move.startSquare == getSquare("a8")) {
-                blackCastleQueenRights = false
+            when (move.startSquare) {
+                getSquare("h1") -> {
+                    whiteCastleKingRights = false
+                }
+                getSquare("a1") -> {
+                    whiteCastleQueenRights = false
+                }
+                getSquare("h8") -> {
+                    blackCastleKingRights = false
+                }
+                getSquare("a8") -> {
+                    blackCastleQueenRights = false
+                }
             }
         }
     }

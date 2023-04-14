@@ -386,7 +386,7 @@ class ChessView : View {
             val clickedSquare = board.board[col][row]
             if (highlightedSquare != null && board.isMoveValid(clickedSquare)) {
                 Log.d("chessview", "onmovemade called")
-                val isCapture = if (game.toMove == Color.WHITE){
+                val isCapture = if (game.toMove == Color.WHITE) {
                     (clickedSquare.pieceColor == Color.BLACK)
                 } else {
                     (clickedSquare.pieceColor == Color.WHITE)
@@ -394,10 +394,9 @@ class ChessView : View {
                 game.makeHumanMove(clickedSquare)
                 onMoveMade(highlightedSquare, clickedSquare)
 
-                if (isCapture){
+                if (isCapture) {
                     capturePlayer.start()
-                }
-                else {
+                } else {
                     movePlayer.start()
                 }
                 invalidate()

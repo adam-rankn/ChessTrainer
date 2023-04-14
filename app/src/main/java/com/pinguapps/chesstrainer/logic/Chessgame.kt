@@ -1,11 +1,10 @@
 package com.pinguapps.chesstrainer.logic
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.pinguapps.chesstrainer.data.*
 import com.pinguapps.chesstrainer.logic.bots.BasicBot
 import com.pinguapps.chesstrainer.logic.bots.Bot
-import java.util.*
+import java.util.Stack
 
 
 open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
@@ -445,24 +444,155 @@ open class Chessgame(color: Color = Color.WHITE, bot: Bot = BasicBot()) {
     }
 
 
-    fun importGameFromPgn(string: String): MutableList<String> {
-
-        //remove comments
-        val string2 = string as CharSequence
-        val pgnString = string2.replace(Regex("\\{[^>]*}"), "")
-        val pgn = (pgnString.split(" ") as MutableList<String>)
-        while (pgn.contains("")) {
-            pgn.remove("")
+    fun importGameFromPgn(string: String){
+        val newBoard = Chessboard()
+        val pgn = formatPgn(string)
+        for (line in pgn){
+            val moves = line.split(" ")
+            val white = moves[1]
+            val black = moves[2]
+            makePgnMove(white,Color.WHITE)
+            makePgnMove(black,Color.BLACK)
         }
+
+    }
+
+    fun makePgnMove(pgn: String,color: Color){
+        when (pgn[0]) {
+            'a' -> {
+                val row = pgn[1].toString().toInt()
+                val endSquare = chessboard.board[0][row]
+                if (chessboard.board[0][row-1].pieceType == PieceType.PAWN){
+                    val move = Move(
+                        startSquare = chessboard.board[0][row-1],
+                        endSquare = endSquare,
+                        pieceType = PieceType.PAWN
+                        )
+                    doMove(move)
+                }
+            }
+            'b' -> {
+                //move a pawn
+            }
+            'c' -> {
+                //move a pawn
+            }
+            'd' -> {
+                //move a pawn
+            }
+            'e' -> {
+                //move a pawn
+            }
+            'f' -> {
+                //move a pawn
+            }
+            'g' -> {
+                //move a pawn
+            }
+            'h' -> {
+                //move a pawn
+            }
+            'O' -> {
+                //castling move
+            }
+            'B' -> {
+                //move bishop
+            }
+
+            'N' -> {
+                //move knight
+            }
+
+            'R' -> {
+                //move a rook
+            }
+
+            'Q' -> {
+                //move queen
+            }
+
+            'K' -> {
+                //move king
+            }
+
+
+        }
+    }
+
+    fun doPgnPawnMove(col: Int, pgn: String, color: Color){
+        val row = pgn[1].toString().toInt()
+        val endSquare = chessboard.board[col][row]
+        if ('x' in pgn){
+            //handle capture moves
+        }
+        else {
+            if (color == Color.WHITE) {
+                val prevSquare = chessboard.board[col][row - 1]
+                val prevTwoSquare = chessboard.board[col][row - 1]
+                if (prevSquare.pieceType == PieceType.PAWN && prevSquare.pieceColor == Color.WHITE) {
+                    val move = Move(
+                        startSquare = prevSquare,
+                        endSquare = endSquare,
+                        pieceType = PieceType.PAWN
+                    )
+                    doMove(move)
+                } else if (prevTwoSquare.pieceType == PieceType.PAWN && prevTwoSquare.pieceColor == Color.WHITE) {
+                    val move = Move(
+                        startSquare = prevTwoSquare,
+                        endSquare = endSquare,
+                        pieceType = PieceType.PAWN
+                    )
+                }
+            }
+            else if (color == Color.BLACK){
+                val prevSquare = chessboard.board[col][row + 1]
+                val prevTwoSquare = chessboard.board[col][row + 1]
+                if (prevSquare.pieceType == PieceType.PAWN && prevSquare.pieceColor == Color.WHITE) {
+                    val move = Move(
+                        startSquare = prevSquare,
+                        endSquare = endSquare,
+                        pieceType = PieceType.PAWN
+                    )
+                    doMove(move)
+                } else if (prevTwoSquare.pieceType == PieceType.PAWN && prevTwoSquare.pieceColor == Color.WHITE) {
+                    val move = Move(
+                        startSquare = prevTwoSquare,
+                        endSquare = endSquare,
+                        pieceType = PieceType.PAWN
+                    )
+                }
+            }
+
+        }
+    }
+
+    fun formatPgn(string: String): MutableList<String> {
+        //remove comments
+        //val string2 = string as CharSequence
+        //val pgnString = string2.replace(Regex("\\{[^>]*}"), "")
+        val pgnString = removeTextBetweenBraces(string)
+        val pgn = (pgnString.split(" ") as MutableList<String>)
+/*        while (pgn.contains("")) {
+            pgn.remove("")
+        }*/
         val parsedPgnList: MutableList<String> = mutableListOf()
-        println(pgn.toString())
+        //println(pgn.toString())
         while (pgn.isNotEmpty()) {
             val nextThree = pgn.take(3)
-            println(nextThree.toString())
+            //println(nextThree.toString())
             parsedPgnList.add(nextThree.joinToString(" ").trim())
-            pgn.removeAll(nextThree)
+            pgn.removeAt(0)
+            pgn.removeAt(0)
+            pgn.removeAt(0)
         }
         return parsedPgnList
     }
+
+    fun removeTextBetweenBraces(input: String): String {
+        val regex = Regex("\\{.*?\\}|\\[.*?\\]")
+        return input.replace(regex, "").replace("\\s+".toRegex(), " ").trim()
+    }
+
+
 
 }

@@ -10,20 +10,18 @@ import org.junit.Assert.*
 class TestMove {
 
     @Test
-    fun testMoveNotation(){
+    fun testMoveNotation() {
         val game = Chessgame()
         val board = game.chessboard
         val knightMove = Move(
-            board.getSquare("f3"), board.getSquare("g1")
-            , PieceType.KNIGHT, PieceType.NONE
+            board.getSquare("f3"), board.getSquare("g1"), PieceType.KNIGHT, PieceType.NONE
         )
-        assertEquals("g1f3",knightMove.uciNotation)
+        assertEquals("g1f3", knightMove.uciNotation)
 
         val e4Move = Move(
-            board.getSquare("e4"), board.getSquare("e2")
-            , PieceType.PAWN, PieceType.NONE
+            board.getSquare("e4"), board.getSquare("e2"), PieceType.PAWN, PieceType.NONE
         )
-        assertEquals("e2e4",e4Move.uciNotation)
+        assertEquals("e2e4", e4Move.uciNotation)
 
         val castlesMove = Move(
             endSquare = board.getSquare("g1"),
@@ -31,7 +29,7 @@ class TestMove {
             pieceType = PieceType.KING
         )
 
-        assertEquals("e1g1c",castlesMove.uciNotation)
+        assertEquals("e1g1c", castlesMove.uciNotation)
 
     }
 

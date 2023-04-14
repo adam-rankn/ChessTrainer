@@ -10,7 +10,8 @@ class PassedPawnPuzzles {
         "5k2/2p3pp/pp6/P7/1P6/8/8/7K w - - 0 1",
         "7k/3p2pp/1pp5/1P6/2P5/8/8/7K w - - 0 1",
         "7k/3p1p1p/1pp3p1/1P6/2P5/8/8/7K w - - 0 1",
-        "8/3p1ppk/1pp4p/1P6/2P5/8/8/7K w - - 0 1")
+        "8/3p1ppk/1pp4p/1P6/2P5/8/8/7K w - - 0 1"
+    )
 
     val whiteHatPositionsList = listOf(
         "k7/ppp4p/6p1/6P1/5P1P/8/PPP5/K7 w - - 0 1",
@@ -50,11 +51,13 @@ class PassedPawnPuzzles {
         "k7/5pp1/6p1/4P1P1/7P/8/8/K7 w - - 0 1"
     )
 
-    val allPuzzles: List<String> get() = listOf(
-        whiteUndoublerList,
-        whiteHatPositionsList,
-        whiteSquigglyPositionsList,
-        whiteSquarePositionsList,
-        otherPuzzles).flatten()
+    val allPuzzles: List<String>
+        get() = listOf(
+            whiteUndoublerList,
+            whiteHatPositionsList,
+            whiteSquigglyPositionsList,
+            whiteSquarePositionsList,
+            otherPuzzles
+        ).flatten()
 
 }

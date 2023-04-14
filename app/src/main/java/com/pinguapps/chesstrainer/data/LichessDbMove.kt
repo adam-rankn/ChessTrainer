@@ -1,7 +1,6 @@
 package com.pinguapps.chesstrainer.data
 
 
-
 class LichessDbMove(
     val totalGames: Int = 0,
     val playedPercent: Float = 0f,

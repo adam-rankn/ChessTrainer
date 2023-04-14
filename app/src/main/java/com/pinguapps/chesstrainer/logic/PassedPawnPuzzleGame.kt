@@ -7,7 +7,7 @@ import com.pinguapps.chesstrainer.data.Square
 
 class PassedPawnPuzzleGame(
     var puzzle: String = PassedPawnPuzzleGenerator().generateRandomPawnPuzzle()
-): Chessgame() {
+) : Chessgame() {
 
 
     init {
@@ -17,7 +17,7 @@ class PassedPawnPuzzleGame(
     override fun makeHumanMove(square: Square) {
         super.makeHumanMove(square)
         // if move promotes, game over
-       if (!((square.row == 0 || square.row == 7) && (square.pieceType == PieceType.PAWN))){
+        if (!((square.row == 0 || square.row == 7) && (square.pieceType == PieceType.PAWN))) {
             makeComputerMove()
         }
     }
@@ -25,24 +25,23 @@ class PassedPawnPuzzleGame(
     /**
      * override normal behavior, promote pawn to queen automatically
      */
-    override fun promotePawn(square: Square, pieceType: PieceType, color: Color){
+    override fun promotePawn(square: Square, pieceType: PieceType, color: Color) {
         super.promotePawn(square, PieceType.QUEEN, color)
     }
 
     /**
      * win the game when a pawn reaches 8th rank
      */
-    override fun setPawnPromoted(square: Square){
+    override fun setPawnPromoted(square: Square) {
         if (square.row == 0 && !canKingTake(square)) {
             gameResult.postValue(GameResult.PUZZLE_WON)
             promotePawn(square, PieceType.QUEEN, Color.WHITE)
-        }
-        else if (square.row == 0 && canKingTake(square)) {
+        } else if (square.row == 0 && canKingTake(square)) {
             gameResult.postValue(GameResult.PUZZLE_FAILED)
             promotePawn(square, PieceType.QUEEN, Color.WHITE)
         }
         //deal with "simultaneous" promotion
-        else if (square.row == 7 && gameResult.value == GameResult.GAME_IN_PROGRESS){
+        else if (square.row == 7 && gameResult.value == GameResult.GAME_IN_PROGRESS) {
             gameResult.postValue(GameResult.PUZZLE_FAILED)
             promotePawn(square, PieceType.QUEEN, Color.BLACK)
 
@@ -61,7 +60,7 @@ class PassedPawnPuzzleGame(
     /**
      * resets the board with the same puzzle
      */
-    override fun restartGame(){
+    override fun restartGame() {
         super.newGame()
         loadPositionFenString(puzzle)
 
@@ -71,24 +70,29 @@ class PassedPawnPuzzleGame(
         val row = square.row
         val col = square.col
 
-        if (col != 0 && chessboard.board[col-1][row].pieceType == PieceType.KING
-            && chessboard.board[col-1][row].pieceColor != playerColor){
+        if (col != 0 && chessboard.board[col - 1][row].pieceType == PieceType.KING
+            && chessboard.board[col - 1][row].pieceColor != playerColor
+        ) {
             return true
         }
-        if (col != 0 && chessboard.board[col-1][row+1].pieceType == PieceType.KING
-            && chessboard.board[col-1][row].pieceColor != playerColor){
+        if (col != 0 && chessboard.board[col - 1][row + 1].pieceType == PieceType.KING
+            && chessboard.board[col - 1][row].pieceColor != playerColor
+        ) {
             return true
         }
-        if (chessboard.board[col][row+1].pieceType == PieceType.KING
-            && chessboard.board[col-1][row].pieceColor != playerColor){
+        if (chessboard.board[col][row + 1].pieceType == PieceType.KING
+            && chessboard.board[col - 1][row].pieceColor != playerColor
+        ) {
             return true
         }
-        if (col != 7 && chessboard.board[col+1][row+1].pieceType == PieceType.KING
-            && chessboard.board[col-1][row].pieceColor != playerColor){
+        if (col != 7 && chessboard.board[col + 1][row + 1].pieceType == PieceType.KING
+            && chessboard.board[col - 1][row].pieceColor != playerColor
+        ) {
             return true
         }
-        if (col != 7 && chessboard.board[col+1][row].pieceType == PieceType.KING
-            && chessboard.board[col-1][row].pieceColor != playerColor){
+        if (col != 7 && chessboard.board[col + 1][row].pieceType == PieceType.KING
+            && chessboard.board[col - 1][row].pieceColor != playerColor
+        ) {
             return true
         }
         return false

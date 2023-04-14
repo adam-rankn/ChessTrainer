@@ -10,7 +10,7 @@ class KnightPuzzleGame(
     private var puzzle: Triple<String, List<String>, Int> = KnightMovePuzzleGenerator().puzzle,
     //todo difficulty slider
 
-    ): Chessgame() {
+) : Chessgame() {
 
     init {
         chessboard.loadPositionFenString(puzzle.first)
@@ -22,14 +22,13 @@ class KnightPuzzleGame(
      * checks the special win/loss conditions for this type of puzzle. If incorrect move has been
      * played, set fail , if target square reached, set win
      */
-    override fun makeHumanMove(square: Square){
+    override fun makeHumanMove(square: Square) {
         super.makeHumanMove(square)
-        if (getSquareString(square) !in puzzle.second){
+        if (getSquareString(square) !in puzzle.second) {
             Log.d("knightpuzzle", getSquareString(square))
             Log.d("knightpuzzle", puzzle.second.toString())
             gameResult.postValue(GameResult.PUZZLE_FAILED)
-        }
-        else if (getSquareString(square) == puzzle.second.last()){
+        } else if (getSquareString(square) == puzzle.second.last()) {
             gameResult.postValue(GameResult.PUZZLE_WON)
         }
         chessboard.turn = Color.WHITE
@@ -38,7 +37,7 @@ class KnightPuzzleGame(
     /**
      * override the computer move function as this type of game is single player
      */
-    override fun makeComputerMove(){
+    override fun makeComputerMove() {
     }
 
     /**
@@ -54,16 +53,11 @@ class KnightPuzzleGame(
     /**
      * resets the board with the same puzzle
      */
-    override fun restartGame(){
+    override fun restartGame() {
         super.newGame()
         loadPositionFenString(puzzle.first)
 
     }
-
-
-
-
-
 
 
 }

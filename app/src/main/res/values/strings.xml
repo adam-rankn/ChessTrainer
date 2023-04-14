@@ -33,6 +33,7 @@
     <string name="puzzle_failed">Puzzle Failed</string>
     <string name="wrong_move">Wrong Move Played</string>
     <string name="new_puzzle">New Puzzle</string>
+    <string name="load_position">Load Position</string>
 
     <string name="back_button">Back</string>
 

@@ -5,7 +5,7 @@ import com.pinguapps.chesstrainer.ui.composables.AutoCompleteEntity
 class Opening(
     val name: String,
     val fen: String
-): AutoCompleteEntity {
+) : AutoCompleteEntity {
     override fun filter(query: String): Boolean {
         return name.lowercase()
             .startsWith(query.lowercase())
@@ -143,7 +143,7 @@ val queensPawn = listOf(
     Opening(
         "Grünfeld",
         "rnbqkb1r/ppp1pp1p/5np1/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 0 1"
-    ),        Opening(
+    ), Opening(
         "King's Indian",
         "rnbqkb1r/pppppp1p/5np1/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 1"
     ),

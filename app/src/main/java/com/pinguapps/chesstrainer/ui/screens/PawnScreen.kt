@@ -17,22 +17,14 @@ import com.pinguapps.chesstrainer.ui.composables.Chessboard
 fun PawnScreen(
     onCancelButtonClicked: () -> Unit,
     modifier: Modifier = Modifier
-){
+) {
     val resources = LocalContext.current.resources
 
 
-    Column (
+    Column(
         modifier = modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Chessboard(PassedPawnPuzzleGame())
     }
-}
-
-fun navigateToMenu(
-    viewModel: ChessboardViewModel,
-    navController: NavHostController
-) {
-    viewModel.resetGame()
-    navController.popBackStack(ChessScreen.Menu.name, inclusive = false)
 }

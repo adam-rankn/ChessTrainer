@@ -4,6 +4,11 @@ import android.util.Log
 import com.pinguapps.chesstrainer.data.LichessDbMove
 import com.pinguapps.chesstrainer.data.PieceType
 
+/**
+ *
+ * formats the data from the lichess api
+ *
+ */
 fun getLinesData(data: LichessOpeningData): List<LichessDbMove> {
     val movesList = data.moves
     try {
@@ -16,14 +21,14 @@ fun getLinesData(data: LichessOpeningData): List<LichessDbMove> {
                 val black = move.black!!
                 val draws = move.draws!!
                 val games = white + black + draws
-                val whiteWinPercent: Float = white/games.toFloat()
-                val blackWinPercent: Float = black/games.toFloat()
-                val drawPercent: Float = draws/games.toFloat()
-                val playedPercent = games/totalGames.toFloat()
+                val whiteWinPercent: Float = white / games.toFloat()
+                val blackWinPercent: Float = black / games.toFloat()
+                val drawPercent: Float = draws / games.toFloat()
+                val playedPercent = games / totalGames.toFloat()
 
                 //change weird lichess castling notation to standard uci
                 val uci: String =
-                    if (move.san == "O-O"|| move.san == "O-O-O") {
+                    if (move.san == "O-O" || move.san == "O-O-O") {
                         when (move.uci) {
                             "e1h1" -> "e1g1c"
                             "e1a1" -> "e1c1c"
@@ -33,9 +38,8 @@ fun getLinesData(data: LichessOpeningData): List<LichessDbMove> {
                                 move.uci!!
                             }
                         }
-                    }
-                else {
-                    move.uci!!
+                    } else {
+                        move.uci!!
                     }
 
                 val lichessMove = LichessDbMove(
@@ -51,16 +55,12 @@ fun getLinesData(data: LichessOpeningData): List<LichessDbMove> {
             }
 
             return lines
-        }
-        else {
+        } else {
             return listOf()
         }
 
-
-    }
-    catch (e: java.lang.NullPointerException){
-        Log.e("API error","bad data")
+    } catch (e: java.lang.NullPointerException) {
+        Log.e("API error", "bad data")
         return listOf()
-        //todo
     }
 }
